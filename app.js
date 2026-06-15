@@ -138,31 +138,6 @@ function initScrollReveal() {
 }
 
 // ==========================================================================
-// TIMELINE (SCHEDULE) TAB SWITCHER
-// ==========================================================================
-function switchTimeline(dayNumber) {
-    const tab1 = document.getElementById('tab-day1');
-    const tab2 = document.getElementById('tab-day2');
-    const pane1 = document.getElementById('timeline-1');
-    const pane2 = document.getElementById('timeline-2');
-    
-    if (dayNumber === 1) {
-        tab1.classList.add('active');
-        tab2.classList.remove('active');
-        pane1.classList.add('active');
-        pane2.classList.remove('active');
-    } else {
-        tab2.classList.add('active');
-        tab1.classList.remove('active');
-        pane2.classList.add('active');
-        pane1.classList.remove('active');
-    }
-    
-    // Re-trigger icon creation just in case
-    lucide.createIcons();
-}
-
-// ==========================================================================
 // DIGITAL MATERIAL SEARCH & FILTERS
 // ==========================================================================
 function filterCategory(category, btnElement) {
@@ -196,7 +171,8 @@ function filterMaterials() {
     if (activeBtn) {
         const text = activeBtn.innerText.toLowerCase();
         if (text.includes('modul')) category = 'modul';
-        if (text.includes('bank')) category = 'bank';
+        if (text.includes('game') || text.includes('edugame')) category = 'edugame';
+        if (text.includes('surat') || text.includes('undangan') || text.includes('dokumen')) category = 'dokumen';
     }
     
     const searchVal = document.getElementById('material-search').value.toLowerCase();
@@ -229,39 +205,7 @@ function downloadSimulator(fileName) {
 // ==========================================================================
 // VIDEO CENTER FILTER & MODAL PLAYER
 // ==========================================================================
-function filterVideoCategory(cat, btnElement) {
-    const buttons = document.querySelectorAll('.v-filter-btn');
-    buttons.forEach(btn => btn.classList.remove('active'));
-    btnElement.classList.add('active');
-    
-    const cards = document.querySelectorAll('#video-container .video-card');
-    cards.forEach(card => {
-        const cardCat = card.getAttribute('data-v-category');
-        if (cat === 'semua-v' || cardCat === cat) {
-            card.classList.remove('hidden');
-        } else {
-            card.classList.add('hidden');
-        }
-    });
-}
 
-function playVideoSimulation(embedUrl) {
-    const modal = document.getElementById('video-modal');
-    const iframe = document.getElementById('video-iframe');
-    if (modal && iframe) {
-        iframe.src = embedUrl;
-        modal.classList.add('active');
-    }
-}
-
-function closeVideoModal() {
-    const modal = document.getElementById('video-modal');
-    const iframe = document.getElementById('video-iframe');
-    if (modal && iframe) {
-        iframe.src = '';
-        modal.classList.remove('active');
-    }
-}
 
 // ==========================================================================
 // PORTAL PESERTA INTERACTIVITY (TABS, FORMS, UPLOADS)
@@ -803,77 +747,304 @@ function downloadWordReport() {
 // ==========================================================================
 const speakerBioData = {
     1: {
-        nama: "Dr. H. Hendri, M.Pd.",
-        role: "Dosen Senior & Pakar Numerasi SD",
-        edu: "Gelar Doktor (S3) Pendidikan Matematika dari Universitas Pendidikan Indonesia (UPI). Memfokuskan riset pada metode pengajaran kontekstual ramah anak.",
-        topic: "Konsep Dasar Filosofi Matematika Gembira & Adaptasi Kurikulum Merdeka bagi Jenjang Sekolah Dasar.",
-        exp: [
-            "Ketua Tim Konsultan Kurikulum Numerasi Wilayah Kalimantan Barat.",
-            "Penulis Buku Panduan Pengajaran Matematika Menyenangkan Kementrian Pendidikan.",
-            "18+ Tahun mengajar di Fakultas Tarbiyah dan Keguruan Pendidikan Guru SD."
+        nama: "Reno Susanto, S.Pd",
+        lahir: "Setapuk Besar, 25 Mei 1989",
+        sekolah: "SD Negeri 89 Singkawang",
+        alamat: "Jalan Demang Akub, Kel. Sungai Rasau, Kota Singkawang",
+        kontak: "083151498262",
+        email: "renosusanto7@gmail.com",
+        motto: "Bahagia Selalu dengan Senyum",
+        foto: "assets/narsum/narsum_1.jpg",
+        role: "Fasilitator Matematika Gasing | Ketua KKG Gugus 18",
+        profil: "Reno Susanto, S.Pd. merupakan guru profesional di SD Negeri 89 Singkawang dengan keahlian utama pada pembelajaran matematika metode Gasing (Gampang, Asyik, dan Menyenangkan). Beliau aktif sebagai fasilitator pelatihan guru tingkat kota dan kabupaten, serta menjabat sebagai Ketua KKG Gugus 18 Kota Singkawang.",
+        pendidikan: [
+            { tahun: "-", jenjang: "SD", institusi: "SD Negeri 5 Singkawang Utara" },
+            { tahun: "-", jenjang: "SMP", institusi: "SMP Negeri 8 Singkawang" },
+            { tahun: "-", jenjang: "SMK", institusi: "SMK Negeri 2 Singkawang, Jurusan Administrasi Perkantoran" },
+            { tahun: "-", jenjang: "S1", institusi: "Universitas Terbuka" },
+            { tahun: "Proses", jenjang: "S2", institusi: "Magister – Dalam Proses" }
         ],
-        svg: `<svg viewBox="0 0 300 320" class="speaker-svg-placeholder">
-                <rect width="100%" height="100%" fill="#0f172a" />
-                <circle cx="150" cy="120" r="60" fill="#2563eb" opacity="0.8" />
-                <path d="M 80 240 C 80 180, 220 180, 220 240 L 220 320 L 80 320 Z" fill="#3b82f6" />
-                <rect x="120" y="105" width="25" height="15" rx="3" fill="none" stroke="#fbbf24" stroke-width="3"/>
-                <rect x="155" y="105" width="25" height="15" rx="3" fill="none" stroke="#fbbf24" stroke-width="3"/>
-                <line x1="145" y1="112" x2="155" y2="112" stroke="#fbbf24" stroke-width="3"/>
-                <polygon points="140,195 160,195 150,205" fill="#fbbf24" />
-             </svg>`
+        pengalaman: [
+            "Pengajar AT Gasing Kota Singkawang",
+            "Pengajar AT Gasing Kabupaten Parigi Moutong, Provinsi Sulawesi Tengah",
+            "Fasilitator Matematika Gembira",
+            "Ketua KKG Gugus 18 Kota Singkawang",
+            "Sekretaris PSLCC (Smart Learning and Character Center) – PGRI"
+        ],
+        keahlian: [
+            "Pembelajaran Matematika Metode Gasing",
+            "Pendampingan dan Pelatihan Guru",
+            "Fasilitasi Kegiatan Pengembangan Kompetensi Pendidik",
+            "Penguatan Komunitas Belajar dan KKG"
+        ],
+        materi: "Matematika Gembira: Metode Gasing sebagai Pendekatan Numerasi Aktif dan Menyenangkan untuk Siswa SD"
     },
     2: {
-        nama: "Rina Wijayanti, S.Pd., M.Si.",
-        role: "Ketua Bidang Inovasi IGI Singkawang",
-        edu: "Lulusan Magister (S2) Teknologi Informasi Pendidikan dari Universitas Negeri Yogyakarta. Penggagas berbagai media digital numerasi interaktif Kalbar.",
-        topic: "Pemanfaatan Platform Digital & Gamifikasi Numerasi di Kelas Menggunakan Papan Grid Geometri Virtual.",
-        exp: [
-            "Penerima Penghargaan Guru Inovatif Penggerak Teknologi Kalimantan Barat.",
-            "Trainer Utama Ikatan Guru Indonesia (IGI) Kota Singkawang di bidang IT.",
-            "Praktisi pengembang web game matematika edukatif SD."
+        nama: "U. Witra Ardita, S.Pd",
+        lahir: "Singkawang, 19 Mei 1987",
+        sekolah: "SD Negeri 17 Singkawang",
+        alamat: "Jalan Bambang Ismoyo, Kel. Jawa, Kota Singkawang",
+        kontak: "089518362159",
+        email: "uraywitraardita123@gmail.com",
+        motto: "Berusaha, Berdoa, dan Bersyukur",
+        foto: "assets/narsum/narsum_2.png",
+        role: "Guru SD | Praktisi Pembelajaran Inovatif",
+        profil: "U. Witra Ardita, S.Pd. adalah guru di SD Negeri 17 Singkawang dengan pengalaman luas di bidang profesional sebelum terjun ke dunia pendidikan. Beliau membawa perspektif unik dari dunia industri ke dalam kelas, menciptakan pendekatan pembelajaran yang adaptif, kreatif, dan relevan dengan kebutuhan siswa masa kini.",
+        pendidikan: [
+            { tahun: "-", jenjang: "SD", institusi: "SD Negeri 1 Singkawang" },
+            { tahun: "-", jenjang: "SMP", institusi: "SMP Negeri 4 Singkawang" },
+            { tahun: "-", jenjang: "SMA", institusi: "SMU Negeri 3 Singkawang" },
+            { tahun: "-", jenjang: "S1", institusi: "Universitas Terbuka" }
         ],
-        svg: `<svg viewBox="0 0 300 320" class="speaker-svg-placeholder">
-                <rect width="100%" height="100%" fill="#0f172a" />
-                <circle cx="150" cy="120" r="55" fill="#d97706" opacity="0.8" />
-                <path d="M 90 240 C 90 190, 210 190, 210 240 L 210 320 L 90 320 Z" fill="#fbbf24" />
-                <path d="M 120 120 C 120 70, 180 70, 180 120" fill="none" stroke="#ffffff" stroke-width="4"/>
-                <rect x="135" y="190" width="30" height="20" rx="2" fill="#1e293b" stroke="#ffffff" stroke-width="2"/>
-             </svg>`
+        pengalaman: [
+            "Karyawan Swasta (Kaisar Bakery, Nestle, Mustika Ratu, Martha Tilaar, Pixy, Konimex, Vitalis) — Kasir, Admin, Beauty Advisor, MD (2006–2017)",
+            "Guru SD Negeri 17 Singkawang (2017 – Sekarang)"
+        ],
+        keahlian: [
+            "Pembelajaran Adaptif dan Inovatif",
+            "Manajemen Kelas yang Efektif",
+            "Pendekatan Kontekstual dalam Pembelajaran",
+            "Komunikasi dan Kolaborasi Profesional"
+        ],
+        materi: "Inovasi Pembelajaran Matematika: Menghadirkan Suasana Belajar yang Menyenangkan di Kelas SD"
+    },
+    3: {
+        nama: "Dewi Susanti, S.Pd",
+        lahir: "Singkawang, 27 September 1992",
+        sekolah: "SDN 70 Singkawang",
+        alamat: "Jalan Sebakuan RT.03 RW.04, Kel. Mayasopa, Kec. Singkawang Timur",
+        kontak: "0895354804666",
+        email: "sdewi1365@gmail.com",
+        motto: "Jadi lebih baik setiap hari",
+        foto: "assets/narsum/narsum_3.png",
+        role: "Guru SD | Anggota PGRI | Fasilitator KKG",
+        profil: "Dewi Susanti, S.Pd. adalah guru di SDN 70 Singkawang yang menyelesaikan pendidikan sarjananya di Program Studi PGSD Universitas Tanjungpura. Beliau aktif dalam organisasi PGRI dan memiliki keahlian dalam fasilitasi kegiatan pengembangan kompetensi pendidik serta penguatan komunitas belajar di tingkat gugus.",
+        pendidikan: [
+            { tahun: "-", jenjang: "SD", institusi: "SD Negeri 8 Singkawang Tengah" },
+            { tahun: "-", jenjang: "SMP", institusi: "SMP Negeri 4 Singkawang" },
+            { tahun: "-", jenjang: "SMA", institusi: "SMA Negeri 3 Singkawang" },
+            { tahun: "-", jenjang: "S1", institusi: "Universitas Tanjungpura, Program Studi PGSD" }
+        ],
+        pengalaman: [
+            "Guru di SDN 70 Singkawang",
+            "Anggota Organisasi PGRI Kota Singkawang",
+            "Fasilitator Kegiatan Pengembangan Kompetensi Pendidik",
+            "Penggerak Komunitas Belajar dan KKG"
+        ],
+        keahlian: [
+            "Fasilitasi Pengembangan Kompetensi Pendidik",
+            "Penguatan Komunitas Belajar dan KKG",
+            "Pembelajaran PGSD Berbasis Kurikulum Merdeka",
+            "Kolaborasi dan Mentoring Antar Guru"
+        ],
+        materi: "Penguatan Komunitas Belajar: Strategi Kolaboratif Guru dalam Mengimplementasikan Matematika Gembira"
+    },
+    4: {
+        nama: "Yeni Febry Astuti, S.Pd",
+        lahir: "Pemangkat, 15 Februari 1988",
+        sekolah: "SD Negeri 94 Singkawang",
+        alamat: "Jalan Demang Akub, Kel. Sungai Naram, Kota Singkawang",
+        kontak: "0895352564764",
+        email: "yenifebryastuti19@gmail.com",
+        motto: "Lebih baik mencoba lalu gagal daripada menyesal karena tidak pernah memulai.",
+        foto: "assets/narsum/narsum_4.png",
+        role: "Guru SD | Praktisi PPKn & PGSD",
+        profil: "Yeni Febry Astuti, S.Pd. adalah guru berpengalaman di SD Negeri 94 Singkawang dengan dua gelar sarjana, yaitu PPKn dari STKIP PGRI Pontianak dan PGSD dari Universitas Terbuka. Perpaduan keahlian pendidikan kewarganegaraan dan guru sekolah dasar menjadikan beliau fasilitator yang mampu mengintegrasikan nilai karakter dalam setiap pembelajaran, termasuk matematika.",
+        pendidikan: [
+            { tahun: "-", jenjang: "SD", institusi: "SD Negeri 7 Singkawang" },
+            { tahun: "-", jenjang: "SMP", institusi: "SMP Negeri 4 Singkawang" },
+            { tahun: "-", jenjang: "SMK", institusi: "SMK Negeri 2 Singkawang, Jurusan Administrasi Perkantoran" },
+            { tahun: "-", jenjang: "S1", institusi: "STKIP PGRI Pontianak, Jurusan PPKn" },
+            { tahun: "-", jenjang: "S1", institusi: "Universitas Terbuka, Jurusan PGSD" }
+        ],
+        pengalaman: [
+            "Guru di SDN 4 Singkawang (2009 – 2017)",
+            "Guru di SDN 94 Singkawang (2017 – Sekarang)"
+        ],
+        keahlian: [
+            "Pendidikan Kewarganegaraan (PPKn)",
+            "Pendidikan Guru Sekolah Dasar (PGSD)",
+            "Integrasi Nilai Karakter dalam Pembelajaran",
+            "Desain Pembelajaran Aktif dan Kreatif"
+        ],
+        materi: "Integrasi Nilai Karakter dan Pendidikan Karakter dalam Pembelajaran Matematika yang Menyenangkan"
+    },
+    5: {
+        nama: "Harini Pawi, S.Pd",
+        lahir: "Matang Segantar, 12 Maret 1995",
+        sekolah: "SD Negeri 63 Singkawang",
+        alamat: "Jalan Raya Naram, Kel. Naram, Kec. Singkawang Utara",
+        kontak: "085939305595",
+        email: "harinipawi.123@gmail.com",
+        motto: "Man Jadda Wa Jada (Siapa yang bersungguh-sungguh pasti berhasil)",
+        foto: "assets/narsum/narsum_5.png",
+        role: "Guru SD | Lulusan Universitas Tanjungpura",
+        profil: "Harini Pawi, S.Pd. adalah guru muda bersemangat di SD Negeri 63 Singkawang. Lulusan Universitas Tanjungpura Pontianak ini telah meniti karier mengajar sejak 2017, dengan pengalaman mengajar di berbagai jenjang sekolah mulai dari SMK hingga SMP sebelum bergabung di SD Negeri 63 Singkawang. Dedikasi dan semangat belajarnya menjadi inspirasi bagi peserta pelatihan.",
+        pendidikan: [
+            { tahun: "2000–2006", jenjang: "SD", institusi: "SD Negeri 9 Danau Peradah (Paloh)" },
+            { tahun: "2006–2011", jenjang: "SMP", institusi: "SMP Negeri 3 Teluk Keramat" },
+            { tahun: "2011–2013", jenjang: "SMA", institusi: "SMA Negeri 2 Teluk Keramat" },
+            { tahun: "2013–2017", jenjang: "S1", institusi: "Universitas Tanjungpura Pontianak, Sarjana Pendidikan" }
+        ],
+        pengalaman: [
+            "Guru di SMKN 1 Paloh (2017 – 2023)",
+            "Guru di SMPN 2 Singkawang (2023 – 2024)",
+            "Guru di SDN 63 Singkawang (2024 – Sekarang)"
+        ],
+        keahlian: [
+            "Adaptasi Pembelajaran Lintas Jenjang",
+            "Pendekatan Pembelajaran Aktif dan Inovatif",
+            "Manajemen Kelas yang Kondusif",
+            "Pengembangan Diri dan Profesionalisme Guru"
+        ],
+        materi: "Semangat Baru Mengajar: Transformasi Cara Pandang Guru terhadap Pembelajaran Matematika SD"
+    },
+    6: {
+        nama: "Amalia Kiftiah, S.Pd",
+        lahir: "Mempawah, 10 Maret 1984",
+        sekolah: "SD Negeri 29 Singkawang",
+        alamat: "Jalan Pulau Beliung, Kel. Pasiran, Kec. Singkawang Barat 79123",
+        kontak: "085245881585",
+        email: "amaliakiftiah84@gmail.com",
+        motto: "Jangan Menyerah, Allah Bersama Ku",
+        foto: "assets/narsum/narsum_6.png",
+        role: "Guru SD | Sekretaris APKS PGRI | Ketua KKG Gugus 8",
+        profil: "Amalia Kiftiah, S.Pd. merupakan guru senior berpengalaman di SD Negeri 29 Singkawang dengan dua gelar sarjana dan sedang menempuh program Magister (S2). Beliau aktif di organisasi PGRI sebagai Sekretaris APKS (Asosiasi Profesi dan Keahlian Sejenis) serta terlibat dalam KKG Gugus 8, menjadikannya figur penting dalam pengembangan kompetensi guru di Kota Singkawang.",
+        pendidikan: [
+            { tahun: "-", jenjang: "SD", institusi: "SD Negeri 4 Mempawah" },
+            { tahun: "-", jenjang: "MTs", institusi: "MTs Al-Falah Mempawah" },
+            { tahun: "-", jenjang: "SMA", institusi: "SMA Negeri 1 Mempawah" },
+            { tahun: "-", jenjang: "S1", institusi: "STKIP Pontianak, Jurusan PPKn" },
+            { tahun: "-", jenjang: "S1", institusi: "Universitas Terbuka" },
+            { tahun: "Proses", jenjang: "S2", institusi: "Magister – Dalam Proses (Bismillah)" }
+        ],
+        pengalaman: [
+            "Guru di SDS Karuna Buddha Maitreya Singkawang",
+            "Guru di SD Negeri 29 Singkawang",
+            "Pengurus KKG Gugus 8 Kota Singkawang",
+            "Sekretaris APKS (Asosiasi Profesi dan Keahlian Sejenis) – Organisasi PGRI"
+        ],
+        keahlian: [
+            "Manajemen Organisasi Profesi Kependidikan",
+            "Pengembangan Kompetensi Guru (PPKn & PGSD)",
+            "Koordinasi dan Fasilitasi KKG",
+            "Kepemimpinan Pendidikan dan Advokasi Guru"
+        ],
+        materi: "Peran Organisasi Profesi dalam Mendukung Inovasi Pembelajaran Matematika Gembira di Sekolah"
     }
 };
 
 function openSpeakerModal(id) {
     const data = speakerBioData[id];
-    if (data) {
-        document.getElementById('sp-modal-nama').innerText = data.nama;
-        document.getElementById('sp-modal-role').innerText = data.role;
-        document.getElementById('sp-modal-edu').innerText = data.edu;
-        document.getElementById('sp-modal-topic').innerText = data.topic;
-        document.getElementById('sp-modal-svg-avatar').innerHTML = data.svg;
-        
-        const expList = document.getElementById('sp-modal-experience');
-        expList.innerHTML = '';
-        data.exp.forEach(exp => {
-            const li = document.createElement('li');
-            li.innerText = exp;
-            expList.appendChild(li);
-        });
-        
-        document.getElementById('speaker-modal').classList.add('active');
-        lucide.createIcons();
+    if (!data) return;
+
+    // Build modal content dynamically
+    const modal = document.getElementById('speaker-modal');
+    const modalBody = modal.querySelector('.modal-body') || modal.querySelector('.speaker-modal-bio-layout')?.parentElement?.parentElement;
+    
+    // Find and update the modal content
+    const modalInner = modal.querySelector('.modal-card') || modal.querySelector('.modal-content-inner');
+    
+    // Build the full rich HTML for the modal
+    const pendidikanHTML = data.pendidikan.map(p => `
+        <div class="cv-timeline-item">
+            <div class="cv-timeline-dot"></div>
+            <div class="cv-timeline-body">
+                <span class="cv-timeline-year">${p.tahun}</span>
+                <strong>${p.jenjang}</strong> — ${p.institusi}
+            </div>
+        </div>`).join('');
+
+    const pengalamanHTML = data.pengalaman.map(e => `
+        <div class="cv-exp-item">
+            <i data-lucide="check-circle-2"></i>
+            <span>${e}</span>
+        </div>`).join('');
+
+    const keahlianHTML = data.keahlian.map(k => `<span class="cv-skill-tag">${k}</span>`).join('');
+
+    const fullHTML = `
+        <div class="cv-modal-header">
+            <div class="cv-photo-wrap">
+                <img src="${data.foto}" alt="Foto ${data.nama}" class="cv-modal-photo">
+            </div>
+            <div class="cv-modal-identity">
+                <h2 class="cv-modal-name">${data.nama}</h2>
+                <p class="cv-modal-role">${data.role}</p>
+                <p class="cv-modal-school"><i data-lucide="school"></i> ${data.sekolah}</p>
+                <p class="cv-modal-motto"><i data-lucide="quote"></i> <em>"${data.motto}"</em></p>
+                <div class="cv-contact-row">
+                    <span><i data-lucide="phone"></i> ${data.kontak}</span>
+                    <span><i data-lucide="mail"></i> ${data.email}</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="cv-modal-body">
+            <div class="cv-section">
+                <h4><i data-lucide="user-circle"></i> Profil Singkat</h4>
+                <p>${data.profil}</p>
+            </div>
+
+            <div class="cv-section">
+                <h4><i data-lucide="graduation-cap"></i> Riwayat Pendidikan</h4>
+                <div class="cv-timeline">${pendidikanHTML}</div>
+            </div>
+
+            <div class="cv-section">
+                <h4><i data-lucide="briefcase"></i> Pengalaman Profesional</h4>
+                <div class="cv-exp-list">${pengalamanHTML}</div>
+            </div>
+
+            <div class="cv-section">
+                <h4><i data-lucide="star"></i> Bidang Keahlian</h4>
+                <div class="cv-skills">${keahlianHTML}</div>
+            </div>
+
+            <div class="cv-section cv-materi-box">
+                <h4><i data-lucide="book-open"></i> Materi pada Pelatihan Matematika Gembira</h4>
+                <p class="cv-materi-text">${data.materi}</p>
+            </div>
+        </div>
+    `;
+
+    // Inject into modal
+    const target = modal.querySelector('#cv-modal-content');
+    if (target) {
+        target.innerHTML = fullHTML;
+    } else {
+        // fallback: update legacy fields if exist
+        const namaEl = document.getElementById('sp-modal-nama');
+        const roleEl = document.getElementById('sp-modal-role');
+        if (namaEl) namaEl.innerText = data.nama;
+        if (roleEl) roleEl.innerText = data.role;
     }
+
+    modal.classList.add('active');
+    lucide.createIcons();
 }
 
 function closeSpeakerModal() {
     document.getElementById('speaker-modal').classList.remove('active');
 }
 
+
 // ==========================================================================
 // PANITIA DASHBOARD CONTROL PANEL (PIN: 1234)
 // ==========================================================================
+function getPanitiaPin() {
+    let savedPin = localStorage.getItem('panitia_pin');
+    if (!savedPin) {
+        savedPin = '1234';
+        localStorage.setItem('panitia_pin', savedPin);
+    }
+    return savedPin;
+}
+
 function verifyPin() {
     const pin = document.getElementById('panitia-pin').value;
-    if (pin === '1234') {
+    const correctPin = getPanitiaPin();
+    if (pin === correctPin) {
         document.getElementById('dashboard-login-box').classList.add('hidden');
         document.getElementById('dashboard-main-content').classList.remove('hidden');
         
@@ -898,6 +1069,46 @@ function lockDashboard() {
     if (evaluasiChartObj) evaluasiChartObj.destroy();
     
     showToast('Dashboard Terkunci.', 'lock');
+}
+
+function openSettingsModal() {
+    document.getElementById('settings-current-pin').value = '';
+    document.getElementById('settings-new-pin').value = '';
+    document.getElementById('settings-confirm-pin').value = '';
+    
+    document.getElementById('settings-modal').classList.add('active');
+    lucide.createIcons();
+}
+
+function closeSettingsModal() {
+    document.getElementById('settings-modal').classList.remove('active');
+}
+
+function saveNewPin() {
+    const currentPinInput = document.getElementById('settings-current-pin').value;
+    const newPinInput = document.getElementById('settings-new-pin').value;
+    const confirmPinInput = document.getElementById('settings-confirm-pin').value;
+    
+    const correctPin = getPanitiaPin();
+    
+    if (currentPinInput !== correctPin) {
+        showToast('PIN Saat Ini tidak cocok!', 'x');
+        return;
+    }
+    
+    if (newPinInput.length < 4) {
+        showToast('PIN baru harus minimal 4 karakter!', 'x');
+        return;
+    }
+    
+    if (newPinInput !== confirmPinInput) {
+        showToast('Konfirmasi PIN baru tidak cocok!', 'x');
+        return;
+    }
+    
+    localStorage.setItem('panitia_pin', newPinInput);
+    showToast('PIN Panitia berhasil diubah!', 'check-circle');
+    closeSettingsModal();
 }
 
 function updateDashboardStats() {

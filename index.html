@@ -31,18 +31,14 @@
     <header class="navbar-container" id="navbar">
         <div class="navbar-wrapper">
             <a href="#" class="brand-logo" id="nav-brand">
-                <div class="brand-icon">
-                    <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gold-text"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                </div>
+                <img src="assets/logo_matematika_gembira.png" alt="Logo Matematika Gembira" class="nav-logo-img">
                 <div class="brand-text">
-                    <span class="main-title">MATEMATIKA GEMBIRA</span>
                     <span class="sub-title">Singkawang 2026</span>
                 </div>
             </a>
             
             <nav class="nav-links" id="nav-menu">
                 <a href="#about" class="nav-link active">Tentang</a>
-                <a href="#jadwal" class="nav-link">Jadwal</a>
                 <a href="#narasumber" class="nav-link">Narasumber</a>
                 <a href="#materi" class="nav-link">Materi</a>
                 <a href="#portal" class="nav-link">Portal Peserta</a>
@@ -269,169 +265,155 @@
         </div>
     </section>
 
-    <!-- 4. JADWAL KEGIATAN SECTION (TIMELINE) -->
-    <section class="schedule-section scroll-reveal" id="jadwal">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Timeline Acara</span>
-                <h2>Agenda & Jadwal Kegiatan</h2>
-                <div class="header-line"></div>
-            </div>
-            
-            <div class="timeline-tabs">
-                <button class="tab-btn active" onclick="switchTimeline(1)" id="tab-day1">
-                    <span class="tab-day">Hari Kesatu</span>
-                    <span class="tab-date">Rabu, 17 Juni 2026</span>
-                </button>
-                <button class="tab-btn" onclick="switchTimeline(2)" id="tab-day2">
-                    <span class="tab-day">Hari Kedua</span>
-                    <span class="tab-date">Kamis, 18 Juni 2026</span>
-                </button>
-            </div>
-            
-            <div class="timeline-content">
-                <!-- Day 1 Timeline -->
-                <div class="timeline-pane active" id="timeline-1">
-                    <div class="timeline-item">
-                        <div class="time-badge">07.30 - 08.00</div>
-                        <div class="timeline-card">
-                            <h4>Registrasi Peserta</h4>
-                            <p>Verifikasi kehadiran, pembagian seminar kit, dan konsumsi pagi peserta di Aula Dinas Pendidikan.</p>
-                            <span class="timeline-meta"><i data-lucide="users"></i> Panitia Pelaksana</span>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="time-badge">08.00 - 09.00</div>
-                        <div class="timeline-card highlighted">
-                            <h4>Pembukaan Resmi & Keynote</h4>
-                            <p>Sambutan dari Kepala Dinas Pendidikan & Kebudayaan Kota Singkawang serta Ketua IGI Kota Singkawang sekaligus pembukaan secara simbolis.</p>
-                            <span class="timeline-meta"><i data-lucide="mic"></i> Kepala Disdik & IGI</span>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="time-badge">09.00 - 12.00</div>
-                        <div class="timeline-card">
-                            <h4>Materi: Konsep Dasar Matematika Gembira</h4>
-                            <p>Pemaparan narasumber tentang psikologi pembelajaran numerasi SD, filosofi "Gembira" dalam berhitung, dan adaptasi Kurikulum Merdeka.</p>
-                            <span class="timeline-meta"><i data-lucide="book-open"></i> Dr. H. Hendri, M.Pd.</span>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="time-badge">13.00 - 15.30</div>
-                        <div class="timeline-card">
-                            <h4>Praktik Aktivitas Matematika Kreatif</h4>
-                            <p>Latihan kelompok merancang alat peraga matematika menggunakan bahan daur ulang dan simulasi roleplay mengajar.</p>
-                            <span class="timeline-meta"><i data-lucide="pencil-ruler"></i> Tim Narasumber & Mentor</span>
-                        </div>
-                    </div>
-                </div>
-                
-                <!-- Day 2 Timeline -->
-                <div class="timeline-pane" id="timeline-2">
-                    <div class="timeline-item">
-                        <div class="time-badge">08.00 - 10.30</div>
-                        <div class="timeline-card">
-                            <h4>Workshop: Pengembangan Media Pembelajaran Digital</h4>
-                            <p>Pembuatan media interaktif berbasis game digital sederhana menggunakan platform web yang ramah bagi guru SD.</p>
-                            <span class="timeline-meta"><i data-lucide="monitor"></i> Rina Wijayanti, S.Pd., M.Si.</span>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="time-badge">10.30 - 12.00</div>
-                        <div class="timeline-card highlighted">
-                            <h4>Presentasi Karya Kelompok</h4>
-                            <p>Perwakilan kelompok menampilkan alat peraga dan media digital yang sudah dikembangkan untuk dievaluasi bersama.</p>
-                            <span class="timeline-meta"><i data-lucide="presentation"></i> Semua Peserta & Penilai</span>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="time-badge">13.00 - 14.30</div>
-                        <div class="timeline-card">
-                            <h4>Refleksi & Evaluasi Program</h4>
-                            <p>Sesi tanya jawab akhir, pengisian kuesioner umpan balik, dan penyusunan rencana tindak lanjut implementasi sekolah.</p>
-                            <span class="timeline-meta"><i data-lucide="check-circle2"></i> Tim Evaluator IGI</span>
-                        </div>
-                    </div>
-                    <div class="timeline-item">
-                        <div class="time-badge">14.30 - 15.30</div>
-                        <div class="timeline-card">
-                            <h4>Penutupan & Pembagian Sertifikat</h4>
-                            <p>Penutupan resmi, foto bersama seluruh peserta, panitia, dan narasumber, serta pembagian sertifikat pelatihan digital.</p>
-                            <span class="timeline-meta"><i data-lucide="award"></i> Panitia Dinas & IGI</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
     <!-- 5. PROFIL NARASUMBER SECTION -->
     <section class="speakers-section scroll-reveal" id="narasumber">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Ahli & Praktisi</span>
-                <h2>Profil Narasumber Utama</h2>
+                <span class="section-tag">Fasilitator &amp; Praktisi</span>
+                <h2>Profil Narasumber Pelatihan</h2>
                 <div class="header-line"></div>
+                <p class="section-sub">Guru-guru berpengalaman dan fasilitator terpilih yang akan memandu pelatihan Matematika Gembira di Kota Singkawang.</p>
             </div>
             
-            <div class="speakers-grid">
-                <!-- Speaker 1 -->
-                <div class="speaker-card">
+            <div class="speakers-grid speakers-grid-3">
+
+                <!-- Speaker 1: Reno Susanto -->
+                <div class="speaker-card" onclick="openSpeakerModal(1)">
                     <div class="speaker-photo-container">
-                        <!-- SVG Placeholder for Speaker 1 Photo -->
-                        <svg viewBox="0 0 300 320" class="speaker-svg-placeholder">
-                            <rect width="100%" height="100%" fill="#0f172a" />
-                            <circle cx="150" cy="120" r="60" fill="#2563eb" opacity="0.8" />
-                            <path d="M 80 240 C 80 180, 220 180, 220 240 L 220 320 L 80 320 Z" fill="#3b82f6" />
-                            <!-- Glasses and bowtie inside to symbolize education expert -->
-                            <rect x="120" y="105" width="25" height="15" rx="3" fill="none" stroke="#fbbf24" stroke-width="3"/>
-                            <rect x="155" y="105" width="25" height="15" rx="3" fill="none" stroke="#fbbf24" stroke-width="3"/>
-                            <line x1="145" y1="112" x2="155" y2="112" stroke="#fbbf24" stroke-width="3"/>
-                            <polygon points="140,195 160,195 150,205" fill="#fbbf24" />
-                            <circle cx="150" cy="215" r="5" fill="#fbbf24" />
-                        </svg>
+                        <img src="assets/narsum/narsum_1.jpg" alt="Foto Reno Susanto, S.Pd" class="speaker-real-photo">
+                        <div class="speaker-photo-overlay"><i data-lucide="eye"></i> Lihat Profil</div>
                     </div>
                     <div class="speaker-info">
-                        <h3>Dr. H. Hendri, M.Pd.</h3>
-                        <span class="speaker-role">Dosen Senior & Pakar Numerasi SD</span>
-                        <div class="speaker-meta">
-                            <p><strong>Keahlian:</strong> Desain Aktivitas Matematika Kreatif & Konstruktivisme.</p>
-                            <p><strong>Pengalaman:</strong> 18+ Tahun sebagai akademisi, konsultan kurikulum, dan penulis buku panduan guru.</p>
+                        <h3>Reno Susanto, S.Pd</h3>
+                        <span class="speaker-role"><i data-lucide="school"></i> SD Negeri 89 Singkawang</span>
+                        <div class="speaker-tags">
+                            <span class="sp-tag">Matematika Gasing</span>
+                            <span class="sp-tag">Fasilitator</span>
+                            <span class="sp-tag">KKG Gugus 18</span>
                         </div>
+                        <p class="speaker-motto"><i data-lucide="quote"></i> "Bahagia Selalu dengan Senyum"</p>
                         <div class="speaker-actions">
-                            <button onclick="openSpeakerModal(1)" class="btn btn-outline-sm">Lihat Profil</button>
-                            <a href="#" onclick="alert('Mengunduh CV Dr. H. Hendri, M.Pd. (Simulasi)...')" class="btn btn-text-icon"><i data-lucide="download"></i> CV PDF</a>
+                            <button onclick="event.stopPropagation(); openSpeakerModal(1)" class="btn btn-primary-sm">
+                                <i data-lucide="user"></i> Lihat CV Lengkap
+                            </button>
                         </div>
                     </div>
                 </div>
-                
-                <!-- Speaker 2 -->
-                <div class="speaker-card">
+
+                <!-- Speaker 2: U. Witra Ardita -->
+                <div class="speaker-card" onclick="openSpeakerModal(2)">
                     <div class="speaker-photo-container">
-                        <!-- SVG Placeholder for Speaker 2 Photo -->
-                        <svg viewBox="0 0 300 320" class="speaker-svg-placeholder">
-                            <rect width="100%" height="100%" fill="#0f172a" />
-                            <circle cx="150" cy="120" r="55" fill="#d97706" opacity="0.8" />
-                            <path d="M 90 240 C 90 190, 210 190, 210 240 L 210 320 L 90 320 Z" fill="#fbbf24" />
-                            <!-- Elegant hair outline & folder element -->
-                            <path d="M 120 120 C 120 70, 180 70, 180 120" fill="none" stroke="#ffffff" stroke-width="4"/>
-                            <rect x="135" y="190" width="30" height="20" rx="2" fill="#1e293b" stroke="#ffffff" stroke-width="2"/>
-                            <line x1="142" y1="200" x2="158" y2="200" stroke="#ffffff" stroke-width="2"/>
-                        </svg>
+                        <img src="assets/narsum/narsum_2.png" alt="Foto U. Witra Ardita, S.Pd" class="speaker-real-photo">
+                        <div class="speaker-photo-overlay"><i data-lucide="eye"></i> Lihat Profil</div>
                     </div>
                     <div class="speaker-info">
-                        <h3>Rina Wijayanti, S.Pd., M.Si.</h3>
-                        <span class="speaker-role">Ketua Bidang Inovasi IGI Singkawang</span>
-                        <div class="speaker-meta">
-                            <p><strong>Keahlian:</strong> Media Pembelajaran Digital & Gamifikasi Numerasi.</p>
-                            <p><strong>Pengalaman:</strong> 10+ Tahun melatih integrasi teknologi instruksional dan pendiri platform game matematika.</p>
+                        <h3>U. Witra Ardita, S.Pd</h3>
+                        <span class="speaker-role"><i data-lucide="school"></i> SD Negeri 17 Singkawang</span>
+                        <div class="speaker-tags">
+                            <span class="sp-tag">Guru SD</span>
+                            <span class="sp-tag">Praktisi</span>
+                            <span class="sp-tag">Inovasi Pembelajaran</span>
                         </div>
+                        <p class="speaker-motto"><i data-lucide="quote"></i> "Berusaha, Berdoa, dan Bersyukur"</p>
                         <div class="speaker-actions">
-                            <button onclick="openSpeakerModal(2)" class="btn btn-outline-sm">Lihat Profil</button>
-                            <a href="#" onclick="alert('Mengunduh CV Rina Wijayanti, S.Pd., M.Si. (Simulasi)...')" class="btn btn-text-icon"><i data-lucide="download"></i> CV PDF</a>
+                            <button onclick="event.stopPropagation(); openSpeakerModal(2)" class="btn btn-primary-sm">
+                                <i data-lucide="user"></i> Lihat CV Lengkap
+                            </button>
                         </div>
                     </div>
                 </div>
+
+                <!-- Speaker 3: Dewi Susanti -->
+                <div class="speaker-card" onclick="openSpeakerModal(3)">
+                    <div class="speaker-photo-container">
+                        <img src="assets/narsum/narsum_3.png" alt="Foto Dewi Susanti, S.Pd" class="speaker-real-photo">
+                        <div class="speaker-photo-overlay"><i data-lucide="eye"></i> Lihat Profil</div>
+                    </div>
+                    <div class="speaker-info">
+                        <h3>Dewi Susanti, S.Pd</h3>
+                        <span class="speaker-role"><i data-lucide="school"></i> SDN 70 Singkawang</span>
+                        <div class="speaker-tags">
+                            <span class="sp-tag">PGSD Untan</span>
+                            <span class="sp-tag">PGRI</span>
+                            <span class="sp-tag">Komunitas Belajar</span>
+                        </div>
+                        <p class="speaker-motto"><i data-lucide="quote"></i> "Jadi lebih baik setiap hari"</p>
+                        <div class="speaker-actions">
+                            <button onclick="event.stopPropagation(); openSpeakerModal(3)" class="btn btn-primary-sm">
+                                <i data-lucide="user"></i> Lihat CV Lengkap
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Speaker 4: Yeni Febry Astuti -->
+                <div class="speaker-card" onclick="openSpeakerModal(4)">
+                    <div class="speaker-photo-container">
+                        <img src="assets/narsum/narsum_4.png" alt="Foto Yeni Febry Astuti, S.Pd" class="speaker-real-photo">
+                        <div class="speaker-photo-overlay"><i data-lucide="eye"></i> Lihat Profil</div>
+                    </div>
+                    <div class="speaker-info">
+                        <h3>Yeni Febry Astuti, S.Pd</h3>
+                        <span class="speaker-role"><i data-lucide="school"></i> SD Negeri 94 Singkawang</span>
+                        <div class="speaker-tags">
+                            <span class="sp-tag">PGSD</span>
+                            <span class="sp-tag">PPKn</span>
+                            <span class="sp-tag">Pendidikan Karakter</span>
+                        </div>
+                        <p class="speaker-motto"><i data-lucide="quote"></i> "Lebih baik mencoba lalu gagal daripada menyesal karena tidak pernah memulai."</p>
+                        <div class="speaker-actions">
+                            <button onclick="event.stopPropagation(); openSpeakerModal(4)" class="btn btn-primary-sm">
+                                <i data-lucide="user"></i> Lihat CV Lengkap
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Speaker 5: Harini Pawi -->
+                <div class="speaker-card" onclick="openSpeakerModal(5)">
+                    <div class="speaker-photo-container">
+                        <img src="assets/narsum/narsum_5.png" alt="Foto Harini Pawi, S.Pd" class="speaker-real-photo">
+                        <div class="speaker-photo-overlay"><i data-lucide="eye"></i> Lihat Profil</div>
+                    </div>
+                    <div class="speaker-info">
+                        <h3>Harini Pawi, S.Pd</h3>
+                        <span class="speaker-role"><i data-lucide="school"></i> SD Negeri 63 Singkawang</span>
+                        <div class="speaker-tags">
+                            <span class="sp-tag">Untan Pontianak</span>
+                            <span class="sp-tag">Pengajar Berpengalaman</span>
+                        </div>
+                        <p class="speaker-motto"><i data-lucide="quote"></i> "Man Jadda Wa Jada"</p>
+                        <div class="speaker-actions">
+                            <button onclick="event.stopPropagation(); openSpeakerModal(5)" class="btn btn-primary-sm">
+                                <i data-lucide="user"></i> Lihat CV Lengkap
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Speaker 6: Amalia Kiftiah -->
+                <div class="speaker-card" onclick="openSpeakerModal(6)">
+                    <div class="speaker-photo-container">
+                        <img src="assets/narsum/narsum_6.png" alt="Foto Amalia Kiftiah, S.Pd" class="speaker-real-photo">
+                        <div class="speaker-photo-overlay"><i data-lucide="eye"></i> Lihat Profil</div>
+                    </div>
+                    <div class="speaker-info">
+                        <h3>Amalia Kiftiah, S.Pd</h3>
+                        <span class="speaker-role"><i data-lucide="school"></i> SD Negeri 29 Singkawang</span>
+                        <div class="speaker-tags">
+                            <span class="sp-tag">KKG Gugus 8</span>
+                            <span class="sp-tag">Sekretaris APKS PGRI</span>
+                            <span class="sp-tag">S2 (Proses)</span>
+                        </div>
+                        <p class="speaker-motto"><i data-lucide="quote"></i> "Jangan Menyerah, Allah Bersama Ku"</p>
+                        <div class="speaker-actions">
+                            <button onclick="event.stopPropagation(); openSpeakerModal(6)" class="btn btn-primary-sm">
+                                <i data-lucide="user"></i> Lihat CV Lengkap
+                            </button>
+                        </div>
+                    </div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -453,7 +435,8 @@
                 <div class="filter-tabs">
                     <button class="filter-btn active" onclick="filterCategory('semua', this)">Semua</button>
                     <button class="filter-btn" onclick="filterCategory('modul', this)">Modul Pelatihan</button>
-                    <button class="filter-btn" onclick="filterCategory('bank', this)">Bank Aktivitas</button>
+                    <button class="filter-btn" onclick="filterCategory('edugame', this)">Edugame Matematika</button>
+                    <button class="filter-btn" onclick="filterCategory('dokumen', this)">Surat &amp; Undangan</button>
                 </div>
             </div>
             
@@ -464,29 +447,29 @@
                     <div class="material-icon">
                         <i data-lucide="file-text"></i>
                     </div>
-                    <h3>Modul Utama Matematika Gembira</h3>
-                    <p>Buku panduan lengkap berisi filosofi pembelajaran numerasi SD, konsep gembira, dan petunjuk teknis merancang modul ajar Kurikulum Merdeka.</p>
+                    <h3>Modul 1: Bermain Angka dengan Gembira</h3>
+                    <p>Membiasakan guru dengan konsep bermain angka secara gembira, asyik, dan bermakna di kelas awal Sekolah Dasar.</p>
                     <div class="material-footer">
-                        <span class="file-size">4.8 MB</span>
-                        <button onclick="downloadSimulator('Modul_Utama_Matematika_Gembira.pdf')" class="btn-icon-download" title="Unduh File">
+                        <span class="file-size">51.3 MB</span>
+                        <a href="https://drive.google.com/file/d/1JZpqljf_HsaZX5SH7r2cXkaYwUfouKfD/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh Modul 1">
                             <i data-lucide="download"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
                 <!-- Modul 2 -->
                 <div class="material-card" data-category="modul">
-                    <div class="mat-badge mat-ppt">PPT</div>
+                    <div class="mat-badge mat-pdf">PDF</div>
                     <div class="material-icon">
-                        <i data-lucide="presentation"></i>
+                        <i data-lucide="file-text"></i>
                     </div>
-                    <h3>Slide Presentasi: Psikologi Numerasi SD</h3>
-                    <p>Bahan presentasi narasumber Dr. H. Hendri tentang cara menghadapi kecemasan matematika pada anak dan menstimulasi pemikiran kritis.</p>
+                    <h3>Modul 2: Bermain Simbol dan Pola</h3>
+                    <p>Panduan mengajarkan konsep simbol-simbol matematika dan pengenalan pola secara intuitif dan gembira.</p>
                     <div class="material-footer">
-                        <span class="file-size">12.5 MB</span>
-                        <button onclick="downloadSimulator('Slide_Psikologi_Numerasi_SD.pptx')" class="btn-icon-download" title="Unduh File">
+                        <span class="file-size">21.1 MB</span>
+                        <a href="https://drive.google.com/file/d/19DDJhZ06GswbUVaux-8I7O-2Bwe5Kzqq/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh Modul 2">
                             <i data-lucide="download"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
 
@@ -496,140 +479,116 @@
                     <div class="material-icon">
                         <i data-lucide="book-open"></i>
                     </div>
-                    <h3>Panduan Media Pembelajaran Digital</h3>
-                    <p>Modul teknis pendukung materi Rina Wijayanti berisi langkah-langkah pembuatan game visual interaktif gratis menggunakan platform online.</p>
+                    <h3>Modul 3: Numerasi Gembira - Bentuk di Sekitar Kita</h3>
+                    <p>Eksplorasi bentuk geometri secara nyata di sekitar lingkungan sekolah untuk meningkatkan pemahaman spasial anak.</p>
                     <div class="material-footer">
-                        <span class="file-size">3.2 MB</span>
-                        <button onclick="downloadSimulator('Panduan_Media_Digital.pdf')" class="btn-icon-download" title="Unduh File">
+                        <span class="file-size">36.6 MB</span>
+                        <a href="https://drive.google.com/file/d/18ICHH_U_w5rXzTpnWQs0-kKpK_27o4Ez/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh Modul 3">
                             <i data-lucide="download"></i>
-                        </button>
+                        </a>
                     </div>
                 </div>
                 
-                <!-- Bank 1 -->
-                <div class="material-card" data-category="bank">
-                    <div class="mat-badge mat-zip">ZIP</div>
+                <!-- Modul 4 -->
+                <div class="material-card" data-category="modul">
+                    <div class="mat-badge mat-pdf">PDF</div>
+                    <div class="material-icon">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <h3>Modul 4: Jelajah Ukur</h3>
+                    <p>Metode seru memperkenalkan konsep pengukuran panjang, berat, dan satuan lainnya menggunakan aktivitas luar kelas.</p>
+                    <div class="material-footer">
+                        <span class="file-size">24.9 MB</span>
+                        <a href="https://drive.google.com/file/d/1okjSAm5uCoud8buG6KmN8w7ACV1lUXEL/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh Modul 4">
+                            <i data-lucide="download"></i>
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Modul 5 -->
+                <div class="material-card" data-category="modul">
+                    <div class="mat-badge mat-pdf">PDF</div>
+                    <div class="material-icon">
+                        <i data-lucide="file-text"></i>
+                    </div>
+                    <h3>Modul 5: Berpetualang Bersama Data</h3>
+                    <p>Panduan mengajarkan konsep dasar statistika, pengumpulan data, dan penyajian diagram sederhana yang asyik bagi siswa.</p>
+                    <div class="material-footer">
+                        <span class="file-size">17.0 MB</span>
+                        <a href="https://drive.google.com/file/d/1rE3MS8Xu86R7t7SGH01ph88HfkFYxGlg/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh Modul 5">
+                            <i data-lucide="download"></i>
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Edugame 1 -->
+                <div class="material-card" data-category="edugame">
+                    <div class="mat-badge mat-game">HTML5</div>
                     <div class="material-icon">
                         <i data-lucide="gamepad-2"></i>
                     </div>
-                    <h3>Bank Permainan Matematika Kreatif</h3>
-                    <p>Paket kartu aktivitas, dadu cetak mandiri, dan lembar panduan 15 jenis permainan matematika seru untuk kelas 1-6 SD.</p>
+                    <h3>Edugame Matematika</h3>
+                    <p>Portal interaktif untuk bermain sambil belajar matematika melalui berbagai game edukasi digital yang menarik bagi siswa Sekolah Dasar.</p>
                     <div class="material-footer">
-                        <span class="file-size">8.4 MB</span>
-                        <button onclick="downloadSimulator('Bank_Permainan_Matematika.zip')" class="btn-icon-download" title="Unduh File">
-                            <i data-lucide="download"></i>
-                        </button>
+                        <span class="file-size">Online App</span>
+                        <a href="https://sites.google.com/view/pustakadigitallearningandri/edugame" target="_blank" class="btn-icon-download" title="Mainkan Edugame">
+                            <i data-lucide="external-link"></i>
+                        </a>
                     </div>
                 </div>
 
-                <!-- Bank 2 -->
-                <div class="material-card" data-category="bank">
+                <!-- Dokumen Resmi 1 -->
+                <div class="material-card" data-category="dokumen">
                     <div class="mat-badge mat-pdf">PDF</div>
                     <div class="material-icon">
-                        <i data-lucide="binary"></i>
+                        <i data-lucide="file-check-2"></i>
                     </div>
-                    <h3>Aktivitas Numerasi & Kontekstual</h3>
-                    <p>Kumpulan Lembar Kerja Peserta Didik (LKPD) berbasis pemecahan masalah lingkungan sekitar sekolah (kontekstual).</p>
+                    <h3>Surat Rekomendasi IGI</h3>
+                    <p>Surat rekomendasi resmi dari Ikatan Guru Indonesia (IGI) Kota Singkawang untuk pelaksanaan Pelatihan Matematika Gembira.</p>
                     <div class="material-footer">
-                        <span class="file-size">2.9 MB</span>
-                        <button onclick="downloadSimulator('Aktivitas_Numerasi_Kontekstual.pdf')" class="btn-icon-download" title="Unduh File">
-                            <i data-lucide="download"></i>
-                        </button>
+                        <span class="file-size">96 KB</span>
+                        <a href="https://drive.google.com/file/d/1BA-YYygcWNhFIS0wLNn_GCkCctp26ibO/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh / Lihat Surat Rekomendasi">
+                            <i data-lucide="external-link"></i>
+                        </a>
                     </div>
                 </div>
-
-                <!-- Bank 3 -->
-                <div class="material-card" data-category="bank">
-                    <div class="mat-badge mat-docx">DOCX</div>
+                
+                <!-- Dokumen Resmi 2 -->
+                <div class="material-card" data-category="dokumen">
+                    <div class="mat-badge mat-pdf">PDF</div>
                     <div class="material-icon">
-                        <i data-lucide="clipboard-list"></i>
+                        <i data-lucide="mail-open"></i>
                     </div>
-                    <h3>Template LKPD Modifikasi Guru</h3>
-                    <p>Template berkas lembar kerja yang dapat dimodifikasi logo sekolah dan materi soalnya sesuai kebutuhan masing-masing guru.</p>
+                    <h3>Surat Undangan Peserta &amp; Rekomendasi Dinas Pendidikan</h3>
+                    <p>Surat undangan resmi bagi peserta serta rekomendasi dari Kepala Dinas Pendidikan dan Kebudayaan Kota Singkawang.</p>
                     <div class="material-footer">
-                        <span class="file-size">1.1 MB</span>
-                        <button onclick="downloadSimulator('Template_LKPD_Modifikasi.docx')" class="btn-icon-download" title="Unduh File">
-                            <i data-lucide="download"></i>
-                        </button>
+                        <span class="file-size">388 KB</span>
+                        <a href="https://drive.google.com/file/d/1RubPGbDytGh8xvGCkYfyHdQ2i4KcDVnw/view?usp=sharing" target="_blank" class="btn-icon-download" title="Unduh / Lihat Surat Undangan & Rekomendasi">
+                            <i data-lucide="external-link"></i>
+                        </a>
                     </div>
                 </div>
             </div>
         </div>
     </section>
 
-    <!-- 7. VIDEO CENTER SECTION -->
-    <section class="video-section scroll-reveal" id="video">
+    <!-- 7. DOKUMENTASI PELATIHAN SECTION -->
+    <section class="gallery-section scroll-reveal" id="galeri">
         <div class="container">
             <div class="section-header">
-                <span class="section-tag">Media Pembelajaran Visual</span>
-                <h2>Pusat Video & Dokumentasi Pelatihan</h2>
+                <span class="section-tag">Dokumentasi Visual</span>
+                <h2>Dokumentasi Pelatihan</h2>
                 <div class="header-line"></div>
             </div>
 
-            <div class="video-filter-bar">
-                <button class="v-filter-btn active" onclick="filterVideoCategory('semua-v', this)">Semua Video</button>
-                <button class="v-filter-btn" onclick="filterVideoCategory('materi-v', this)">Materi Pembelajaran</button>
-                <button class="v-filter-btn" onclick="filterVideoCategory('praktik-v', this)">Praktik Mengajar</button>
-                <button class="v-filter-btn" onclick="filterVideoCategory('dokumentasi-v', this)">Dokumentasi</button>
-            </div>
-
-            <div class="video-grid" id="video-container">
-                <!-- Video 1 -->
-                <div class="video-card" data-v-category="materi-v">
-                    <div class="video-thumbnail-wrapper">
-                        <!-- Custom SVG Graphic instead of empty image -->
-                        <svg viewBox="0 0 400 225" class="video-svg-placeholder">
-                            <rect width="100%" height="100%" fill="#1e1b4b" />
-                            <polygon points="120,60 120,165 280,112" fill="rgba(251, 191, 36, 0.2)" />
-                            <text x="50" y="200" font-family="'Poppins', sans-serif" font-size="16" fill="#fbbf24" font-weight="600">Simulasi Game Konsep Pecahan</text>
-                            <circle cx="200" cy="112" r="35" fill="#fbbf24" opacity="0.9" />
-                            <polygon points="190,97 190,127 218,112" fill="#0f172a" />
-                        </svg>
-                        <span class="video-duration">12:45</span>
+            <div class="coming-soon-container">
+                <div class="coming-soon-card">
+                    <div class="cs-icon">
+                        <i data-lucide="camera"></i>
                     </div>
-                    <div class="video-details">
-                        <h4>Metode Visualisasi Konsep Pecahan SD</h4>
-                        <p>Video peragaan penggunaan alat peraga piring pecahan berwarna untuk mengenalkan konsep penyebut dan pembilang kelas 3 SD.</p>
-                        <button onclick="playVideoSimulation('https://www.youtube.com/embed/dQw4w9WgXcQ')" class="btn-play-video"><i data-lucide="play"></i> Putar Video</button>
-                    </div>
-                </div>
-
-                <!-- Video 2 -->
-                <div class="video-card" data-v-category="praktik-v">
-                    <div class="video-thumbnail-wrapper">
-                        <svg viewBox="0 0 400 225" class="video-svg-placeholder">
-                            <rect width="100%" height="100%" fill="#064e3b" />
-                            <polygon points="50,40 180,60 220,180" fill="rgba(16, 185, 129, 0.2)" />
-                            <text x="50" y="200" font-family="'Poppins', sans-serif" font-size="16" fill="#fbbf24" font-weight="600">Praktik Roleplay Mengajar Matematika</text>
-                            <circle cx="200" cy="112" r="35" fill="#fbbf24" opacity="0.9" />
-                            <polygon points="190,97 190,127 218,112" fill="#0f172a" />
-                        </svg>
-                        <span class="video-duration">08:20</span>
-                    </div>
-                    <div class="video-details">
-                        <h4>Praktik Simulasi Kelas Terbuka</h4>
-                        <p>Dokumentasi salah satu kelompok guru SD melakukan simulasi pembelajaran matematika gembira dengan metode bermain peran di kelas.</p>
-                        <button onclick="playVideoSimulation('https://www.youtube.com/embed/dQw4w9WgXcQ')" class="btn-play-video"><i data-lucide="play"></i> Putar Video</button>
-                    </div>
-                </div>
-
-                <!-- Video 3 -->
-                <div class="video-card" data-v-category="dokumentasi-v">
-                    <div class="video-thumbnail-wrapper">
-                        <svg viewBox="0 0 400 225" class="video-svg-placeholder">
-                            <rect width="100%" height="100%" fill="#1e293b" />
-                            <circle cx="200" cy="112" r="70" fill="none" stroke="rgba(255,255,255,0.05)" stroke-width="4" />
-                            <text x="50" y="200" font-family="'Poppins', sans-serif" font-size="16" fill="#fbbf24" font-weight="600">Highlight Kegiatan Pelatihan Hari 1</text>
-                            <circle cx="200" cy="112" r="35" fill="#fbbf24" opacity="0.9" />
-                            <polygon points="190,97 190,127 218,112" fill="#0f172a" />
-                        </svg>
-                        <span class="video-duration">05:15</span>
-                    </div>
-                    <div class="video-details">
-                        <h4>Highlight Pembukaan & Sesi Pertama</h4>
-                        <p>Rangkuman video kegiatan pembukaan, sambutan resmi dinas pendidikan, serta suasana interaktif materi sesi pertama.</p>
-                        <button onclick="playVideoSimulation('https://www.youtube.com/embed/dQw4w9WgXcQ')" class="btn-play-video"><i data-lucide="play"></i> Putar Video</button>
-                    </div>
+                    <h3>Coming Soon</h3>
+                    <p>Foto-foto dokumentasi keseruan dan aktivitas praktis pelatihan Matematika Gembira di Kota Singkawang akan diunggah di sini setelah kegiatan berlangsung.</p>
+                    <div class="cs-badge">Segera Hadir</div>
                 </div>
             </div>
         </div>
@@ -803,204 +762,8 @@
         </div>
     </section>
 
-    <!-- 10. DOWNLOAD CENTER SECTION -->
-    <section class="download-center-section scroll-reveal" id="download-center">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Akses Berkas Lengkap</span>
-                <h2>Pusat Unduhan Berkas Pelatihan</h2>
-                <div class="header-line"></div>
-            </div>
 
-            <div class="download-grid">
-                <!-- Card 1 -->
-                <div class="download-card">
-                    <div class="download-card-body">
-                        <div class="d-icon-box"><i data-lucide="archive"></i></div>
-                        <div>
-                            <h4>Paket Modul Lengkap</h4>
-                            <p>Bundel seluruh berkas PDF, slide materi narasumber hari 1 & hari 2.</p>
-                        </div>
-                    </div>
-                    <button onclick="downloadSimulator('Paket_Materi_Lengkap_Matematika_Gembira.zip')" class="btn btn-outline-sm btn-full-width"><i data-lucide="download"></i> Download ZIP (22.5 MB)</button>
-                </div>
 
-                <!-- Card 2 -->
-                <div class="download-card">
-                    <div class="download-card-body">
-                        <div class="d-icon-box"><i data-lucide="award"></i></div>
-                        <div>
-                            <h4>Sertifikat Pelatihan (Template)</h4>
-                            <p>Template sertifikat 32 JP dari Dinas Pendidikan untuk peserta pelatihan.</p>
-                        </div>
-                    </div>
-                    <button onclick="downloadSimulator('Sertifikat_Pelatihan_Guru_Template.pdf')" class="btn btn-outline-sm btn-full-width"><i data-lucide="download"></i> Download PDF (1.8 MB)</button>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="download-card">
-                    <div class="download-card-body">
-                        <div class="d-icon-box"><i data-lucide="file-text"></i></div>
-                        <div>
-                            <h4>Template Laporan Microsoft Word</h4>
-                            <p>Template laporan PKB resmi yang dapat diisi manual secara offline.</p>
-                        </div>
-                    </div>
-                    <button onclick="downloadSimulator('Template_Laporan_Kegiatan_Guru.docx')" class="btn btn-outline-sm btn-full-width"><i data-lucide="download"></i> Download DOCX (850 KB)</button>
-                </div>
-
-                <!-- Card 4 -->
-                <div class="download-card">
-                    <div class="download-card-body">
-                        <div class="d-icon-box"><i data-lucide="image"></i></div>
-                        <div>
-                            <h4>Dokumentasi Foto Resolusi Tinggi</h4>
-                            <p>Kumpulan foto bersama, kegiatan praktik kelompok untuk lampiran laporan.</p>
-                        </div>
-                    </div>
-                    <button onclick="downloadSimulator('Dokumentasi_Foto_Kegiatan.zip')" class="btn btn-outline-sm btn-full-width"><i data-lucide="download"></i> Download ZIP (45 MB)</button>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 11. GALLERY SECTION -->
-    <section class="gallery-section scroll-reveal" id="galeri">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Dokumentasi Visual</span>
-                <h2>Galeri Pembelajaran Matematika</h2>
-                <div class="header-line"></div>
-            </div>
-
-            <!-- Masonry Grid Layout -->
-            <div class="gallery-masonry">
-                <!-- Item 1 -->
-                <div class="gallery-item size-large">
-                    <svg viewBox="0 0 400 450" class="gallery-svg-placeholder">
-                        <rect width="100%" height="100%" fill="#1e3a8a" />
-                        <circle cx="200" cy="225" r="120" fill="none" stroke="rgba(251, 191, 36, 0.2)" stroke-width="8" stroke-dasharray="10 20" />
-                        <!-- Graphic of teachers discussing -->
-                        <rect x="120" y="180" width="160" height="120" rx="10" fill="#0f172a" stroke="#fbbf24" stroke-width="2" />
-                        <line x1="150" y1="200" x2="250" y2="200" stroke="#fbbf24" stroke-width="4"/>
-                        <line x1="170" y1="230" x2="230" y2="230" stroke="#fbbf24" stroke-width="4"/>
-                        <text x="140" y="270" font-family="'Nunito', sans-serif" font-size="18" fill="#ffffff" font-weight="700">Diskusi Alat Peraga</text>
-                    </svg>
-                    <div class="gallery-overlay">
-                        <h4>Kelompok Guru Merancang Media Kreatif</h4>
-                        <p>Peserta aktif mendiskusikan implementasi alat peraga kubus geometri.</p>
-                    </div>
-                </div>
-
-                <!-- Item 2 -->
-                <div class="gallery-item">
-                    <svg viewBox="0 0 400 300" class="gallery-svg-placeholder">
-                        <rect width="100%" height="100%" fill="#3b82f6" />
-                        <path d="M 50,150 L 350,150" stroke="#fbbf24" stroke-width="5" />
-                        <circle cx="200" cy="150" r="40" fill="#1e293b" stroke="#fbbf24" stroke-width="3" />
-                        <text x="193" y="158" font-family="'Poppins', sans-serif" font-size="24" fill="#ffffff" font-weight="800">×</text>
-                    </svg>
-                    <div class="gallery-overlay">
-                        <h4>Simulasi Permainan Kartu Angka</h4>
-                        <p>Mengintegrasikan operasi perkalian menyenangkan pada kartu buatan guru.</p>
-                    </div>
-                </div>
-
-                <!-- Item 3 -->
-                <div class="gallery-item">
-                    <svg viewBox="0 0 400 300" class="gallery-svg-placeholder">
-                        <rect width="100%" height="100%" fill="#0f172a" />
-                        <!-- Golden math grid -->
-                        <line x1="100" y1="50" x2="100" y2="250" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" />
-                        <line x1="200" y1="50" x2="200" y2="250" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" />
-                        <line x1="300" y1="50" x2="300" y2="250" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" />
-                        <line x1="50" y1="100" x2="350" y2="100" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" />
-                        <line x1="50" y1="200" x2="350" y2="200" stroke="rgba(251, 191, 36, 0.3)" stroke-width="2" />
-                        <text x="110" y="80" font-family="'Nunito', sans-serif" font-size="28" fill="#fbbf24" font-weight="800">1</text>
-                        <text x="210" y="180" font-family="'Nunito', sans-serif" font-size="28" fill="#ffffff" font-weight="800">2</text>
-                        <text x="310" y="240" font-family="'Nunito', sans-serif" font-size="28" fill="#fbbf24" font-weight="800">3</text>
-                    </svg>
-                    <div class="gallery-overlay">
-                        <h4>Materi Numerasi Berbasis Papan Grid</h4>
-                        <p>Mengaplikasikan visual koordinat geometri untuk jenjang sekolah dasar.</p>
-                    </div>
-                </div>
-
-                <!-- Item 4 -->
-                <div class="gallery-item size-large">
-                    <svg viewBox="0 0 400 450" class="gallery-svg-placeholder">
-                        <rect width="100%" height="100%" fill="#111827" />
-                        <rect x="50" y="80" width="300" height="290" rx="15" fill="#1e293b" stroke="#fbbf24" stroke-width="3" />
-                        <!-- Screen mockup -->
-                        <polygon points="120,170 280,170 200,270" fill="#fbbf24" opacity="0.8" />
-                        <text x="130" y="140" font-family="'Poppins', sans-serif" font-size="18" fill="#ffffff" font-weight="700">Workshop Digital Media</text>
-                    </svg>
-                    <div class="gallery-overlay">
-                        <h4>Workshop Integrasi Digital</h4>
-                        <p>Para guru berlatih membuat kuis matematika interaktif dengan laptop masing-masing.</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- 12. TESTIMONIAL SECTION -->
-    <section class="testimonial-section scroll-reveal" id="testimoni">
-        <div class="container">
-            <div class="section-header">
-                <span class="section-tag">Pengalaman Peserta</span>
-                <h2>Ulasan & Testimoni Guru</h2>
-                <div class="header-line"></div>
-            </div>
-
-            <div class="testimoni-grid">
-                <!-- Card 1 -->
-                <div class="testimoni-card">
-                    <div class="quote-icon"><i data-lucide="quote"></i></div>
-                    <p class="testimoni-text">"Pelatihan ini benar-benar membuka mata saya bahwa matematika tidak harus menakutkan. Strategi permainan dadu numerasi sangat cocok untuk anak-anak kelas 1 di sekolah saya!"</p>
-                    <div class="testimoni-user">
-                        <div class="user-avatar">
-                            <span class="avatar-fallback">SH</span>
-                        </div>
-                        <div class="user-info">
-                            <h5>Siti Halimah, S.Pd.</h5>
-                            <span>Guru Kelas 1, SDN 02 Singkawang Selatan</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 2 -->
-                <div class="testimoni-card">
-                    <div class="quote-icon"><i data-lucide="quote"></i></div>
-                    <p class="testimoni-text">"Sangat terbantu dengan fitur pembuat laporan otomatisnya. Selain materinya yang berbobot mengenai IT, saya bisa hemat waktu menyusun laporan bulanan untuk kepala sekolah."</p>
-                    <div class="testimoni-user">
-                        <div class="user-avatar">
-                            <span class="avatar-fallback">BP</span>
-                        </div>
-                        <div class="user-info">
-                            <h5>Budi Pratama, S.Pd.SD.</h5>
-                            <span>Guru Kelas 5, SDN 09 Singkawang Tengah</span>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Card 3 -->
-                <div class="testimoni-card">
-                    <div class="quote-icon"><i data-lucide="quote"></i></div>
-                    <p class="testimoni-text">"Terima kasih Disdik dan IGI Singkawang. Narasumber menyajikan materi dengan interaktif dan sangat aplikatif. Saya langsung mempraktikkan game visual pecahan pada hari berikutnya!"</p>
-                    <div class="testimoni-user">
-                        <div class="user-avatar">
-                            <span class="avatar-fallback">AR</span>
-                        </div>
-                        <div class="user-info">
-                            <h5>Amelia Rosa, S.Pd.</h5>
-                            <span>Guru Matematika, SDN 15 Singkawang Utara</span>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
 
     <!-- 13. DEVELOPER PROFILE SECTION -->
     <section class="developer-section scroll-reveal" id="developer">
@@ -1011,39 +774,176 @@
                 <div class="header-line"></div>
             </div>
 
-            <div class="developer-card">
-                <div class="developer-photo">
-                    <svg viewBox="0 0 250 250" class="dev-svg-placeholder">
-                        <rect width="100%" height="100%" fill="#0f172a" />
-                        <circle cx="125" cy="100" r="50" fill="#2563eb" />
-                        <path d="M 60,200 C 60,150 190,150 190,200 L 190,250 L 60,250 Z" fill="#3b82f6" />
-                        <!-- Developer computer icon overlay -->
-                        <rect x="100" y="170" width="50" height="30" rx="3" fill="#1e293b" stroke="#fbbf24" stroke-width="2"/>
-                        <line x1="125" y1="200" x2="125" y2="215" stroke="#fbbf24" stroke-width="2"/>
-                        <line x1="115" y1="215" x2="135" y2="215" stroke="#fbbf24" stroke-width="2"/>
-                    </svg>
+            <div class="developer-card-premium">
+                <!-- LEFT COLUMN: Profile Info -->
+                <div class="dev-profile-sidebar">
+                    <div class="dev-photo-container">
+                        <img src="assets/dev_andri.jpg" alt="Foto Andri Suwandi, S.Pd" class="dev-real-photo">
+                    </div>
+                    <div class="dev-profile-main">
+                        <span class="dev-badge"><i data-lucide="award"></i> ASN Guru &amp; Web Developer</span>
+                        <h3>ANDRI SUWANDI</h3>
+                        <p class="dev-unit"><i data-lucide="school"></i> SDN 61 Singkawang</p>
+                        <p class="dev-motto-box">
+                            <i data-lucide="quote"></i>
+                            <em>"Man Jadda Wa Jada"</em><br>
+                            <span class="motto-translation">Barangsiapa yang bersungguh-sungguh, maka ia akan berhasil.</span>
+                        </p>
+                        
+                        <div class="dev-contact-list">
+                            <a href="https://s.id/andrisuwandi" target="_blank" class="dev-contact-item">
+                                <i data-lucide="globe"></i> s.id/andrisuwandi
+                            </a>
+                            <a href="mailto:andrysuwandi31@gmail.com" class="dev-contact-item">
+                                <i data-lucide="mail"></i> andrysuwandi31@gmail.com
+                            </a>
+                            <a href="tel:+6285845429270" class="dev-contact-item">
+                                <i data-lucide="phone"></i> +62 858-4542-9270
+                            </a>
+                            <span class="dev-contact-item">
+                                <i data-lucide="map-pin"></i> Jl. Siaga, Gg. Bersatu No.79, Kel. Roban, Kec. Singkawang Tengah
+                            </span>
+                        </div>
+                    </div>
                 </div>
-                <div class="developer-info">
-                    <span class="dev-badge"><i data-lucide="code-2"></i> Developer & Pendidik</span>
-                    <h3>Andri Suwandi</h3>
-                    <p class="dev-title">Guru SD & Pengembang Inovasi Pembelajaran Digital</p>
-                    <p class="dev-bio">
-                        Aktif sebagai pendidik sekolah dasar dan instruktur IT di lingkungan Ikatan Guru Indonesia (IGI) Kota Singkawang. Berkomitmen dalam mengintegrasikan teknologi modern untuk memudahkan administrasi guru serta menciptakan visualisasi belajar yang ramah bagi anak-anak.
-                    </p>
-                    
-                    <div class="dev-portfolio">
-                        <h4>Hasil Karya / Portofolio:</h4>
-                        <ul>
-                            <li><i data-lucide="check-circle2"></i> Aplikasi Penilaian Numerasi Interaktif SD Kota Singkawang</li>
-                            <li><i data-lucide="check-circle2"></i> Sistem Administrasi Laporan PKB Berbasis Web</li>
-                            <li><i data-lucide="check-circle2"></i> Media Pembelajaran MathFun untuk Kelas Rendah</li>
+
+                <!-- RIGHT COLUMN: Professional Details -->
+                <div class="dev-profile-details">
+                    <!-- Section 1: Karya Inovasi -->
+                    <div class="dev-section">
+                        <h4 class="dev-section-title"><i data-lucide="folder-git-2"></i> Karya &amp; Aplikasi Inovasi</h4>
+                        <div class="dev-karya-grid">
+                            <a href="https://s.id/pudingg" target="_blank" class="karya-card">
+                                <div class="karya-icon"><i data-lucide="book-open"></i></div>
+                                <div class="karya-text">
+                                    <strong>Aplikasi Pustaka Digital Learning (PUDING)</strong>
+                                    <span>s.id/pudingg</span>
+                                </div>
+                            </a>
+                            <a href="https://s.id/admsgmpropaymen" target="_blank" class="karya-card">
+                                <div class="karya-icon"><i data-lucide="layers"></i></div>
+                                <div class="karya-text">
+                                    <strong>Aplikasi Administrasi Kelas untuk semua jenjang</strong>
+                                    <span>Akses Aplikasi &rarr;</span>
+                                </div>
+                            </a>
+                            <div class="karya-card-static">
+                                <div class="karya-icon"><i data-lucide="file-spreadsheet"></i></div>
+                                <div class="karya-text">
+                                    <strong>Aplikasi Laporan Dana BOS Berbasis Excel</strong>
+                                </div>
+                            </div>
+                            <div class="karya-card-static">
+                                <div class="karya-icon"><i data-lucide="file-spreadsheet"></i></div>
+                                <div class="karya-text">
+                                    <strong>Aplikasi Administrasi Kelas Berbasis Excel</strong>
+                                </div>
+                            </div>
+                            <div class="karya-card-static">
+                                <div class="karya-icon"><i data-lucide="file-spreadsheet"></i></div>
+                                <div class="karya-text">
+                                    <strong>Aplikasi SPJ Dana BOS Berbasis Excel</strong>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 2: Prestasi & Penghargaan -->
+                    <div class="dev-section">
+                        <h4 class="dev-section-title"><i data-lucide="trophy"></i> Prestasi Utama</h4>
+                        <ul class="dev-bullet-list">
+                            <li><i data-lucide="award"></i> Juara 1 Lomba Futsal dalam rangka Hari Guru Nasional Tingkat Kota Singkawang Tahun 2017</li>
+                            <li><i data-lucide="award"></i> Finalis Lomba Kreasi Inovasi Daerah (Kresida) Kota Singkawang Tahun 2024</li>
+                            <li><i data-lucide="award"></i> Juara 1 Lomba Singkawang Innovation Award (SINAR) Tahun 2025</li>
+                            <li><i data-lucide="award"></i> Peringkat 1 Pelatihan Dasar Calon Pegawai Negeri Sipil Angkatan LXX Kota Singkawang Tahun 2021</li>
+                            <li><i data-lucide="award"></i> Juara 1 Lomba Apresiasi GTK Transformatif SD Tingkat Kota Singkawang Tahun 2025</li>
+                            <li><i data-lucide="award"></i> Juara 1 Lomba Apresiasi GTK Transformatif SD Tingkat Provinsi Kalimantan Barat Tahun 2025</li>
+                            <li><i data-lucide="award"></i> Finalis Lomba Apresiasi GTK Transformatif SD Tingkat Nasional Tahun 2025</li>
                         </ul>
                     </div>
 
-                    <div class="dev-contacts">
-                        <a href="mailto:andri.suwandi@email.com" class="btn-contact"><i data-lucide="mail"></i> andri.suwandi@email.com</a>
-                        <a href="tel:+628123456789" class="btn-contact"><i data-lucide="phone"></i> +62 812-3456-7890</a>
-                        <span class="btn-contact"><i data-lucide="map-pin"></i> Singkawang, Kalimantan Barat</span>
+                    <!-- Section 3: Dua Kolom - Pendidikan & Pengalaman -->
+                    <div class="dev-columns-grid">
+                        <div class="dev-col-section">
+                            <h4 class="dev-section-title"><i data-lucide="graduation-cap"></i> Pendidikan Formal</h4>
+                            <div class="dev-mini-timeline">
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2017–2019</span>
+                                    <strong>Universitas Terbuka</strong> — PGSD
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2011–2015</span>
+                                    <strong>STIT S.A Singkawang</strong> — PAI
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2008–2011</span>
+                                    <strong>SMAN 7 Singkawang</strong> — IPS
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2005–2008</span>
+                                    <strong>SMPN 2 Singkawang</strong>
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">1999–2005</span>
+                                    <strong>SDN 8 Singkawang Timur</strong>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="dev-col-section">
+                            <h4 class="dev-section-title"><i data-lucide="briefcase"></i> Pengalaman Kerja</h4>
+                            <div class="dev-mini-timeline">
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2021–Sekarang</span>
+                                    <strong>ASN Guru</strong> — SDN 61 Singkawang
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2019–2020</span>
+                                    <strong>Guru Tidak Tetap (GTT)</strong> — Disdikbud Kota Singkawang
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2017–2019</span>
+                                    <strong>Staf Pengawas Pemilu</strong> — Kecamatan Singkawang Timur
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2013–2015</span>
+                                    <strong>Penyuluh Agama Islam</strong> — KUA Kecamatan Singkawang Timur
+                                </div>
+                                <div class="timeline-step">
+                                    <span class="timeline-time">2011–2019</span>
+                                    <strong>Tenaga Honorer Guru &amp; TU</strong> — SDN 68 Singkawang
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Section 4: Pendidikan Keprofesian -->
+                    <div class="dev-section">
+                        <h4 class="dev-section-title"><i data-lucide="shield-check"></i> Sertifikasi &amp; Keprofesian</h4>
+                        <div class="dev-sertifikasi-tags">
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Guru Penggerak (2022)</span>
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Sertifikasi Guru (2023)</span>
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Pengajar Praktik Guru Penggerak (2024)</span>
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Quizizz Super Trainer Nasional (2024)</span>
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Narasumber BERGEMA Nasional (2024)</span>
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Fasilitator Daerah LITNUM (2024)</span>
+                            <span class="sertif-tag"><i data-lucide="check-circle-2"></i> Fasilitator PM (2025)</span>
+                        </div>
+                    </div>
+
+                    <!-- Section 5: Keterampilan -->
+                    <div class="dev-section">
+                        <h4 class="dev-section-title"><i data-lucide="cpu"></i> Keterampilan Utama</h4>
+                        <div class="dev-skills-cloud">
+                            <span class="skill-tag">Microsoft Office</span>
+                            <span class="skill-tag">Teknologi Informasi</span>
+                            <span class="skill-tag">Media Pembelajaran IT &amp; Non IT</span>
+                            <span class="skill-tag">Pembuatan Pustaka Digital</span>
+                            <span class="skill-tag">Desain Grafis (Canva, Photoshop, Corel Draw)</span>
+                            <span class="skill-tag">Aplikasi Berbasis Excel</span>
+                            <span class="skill-tag">Video Editing (Filmora &amp; CapCut)</span>
+                            <span class="skill-tag">Google Form &amp; AutoCrat</span>
+                            <span class="skill-tag">Web Development</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -1070,7 +970,6 @@
                     <input type="password" id="panitia-pin" placeholder="Masukkan PIN Panitia" onkeydown="if(event.key==='Enter') verifyPin()">
                     <button onclick="verifyPin()" class="btn btn-primary">Buka Dashboard</button>
                 </div>
-                <p class="pin-hint">Petunjuk: Masukkan PIN default <strong class="gold-text">1234</strong> untuk demo.</p>
             </div>
 
             <!-- Dashboard Content State (Hidden by default) -->
@@ -1080,7 +979,10 @@
                         <span class="db-badge-active"><i data-lucide="unlock"></i> Terkoneksi Resmi</span>
                         <h3>Dashboard Administrasi Utama</h3>
                     </div>
-                    <button onclick="lockDashboard()" class="btn btn-outline-sm btn-lock"><i data-lucide="lock"></i> Kunci Dashboard</button>
+                    <div class="db-action-btns" style="display: flex; gap: 10px;">
+                        <button onclick="openSettingsModal()" class="btn btn-outline-sm"><i data-lucide="settings"></i> Pengaturan Akun</button>
+                        <button onclick="lockDashboard()" class="btn btn-outline-sm btn-lock"><i data-lucide="lock"></i> Kunci Dashboard</button>
+                    </div>
                 </div>
 
                 <!-- Stats Cards Row -->
@@ -1171,8 +1073,7 @@
         <div class="container footer-grid">
             <div class="footer-brand-side">
                 <div class="footer-logo">
-                    <svg viewBox="0 0 24 24" width="32" height="32" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round" class="gold-text"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-                    <span>MATEMATIKA GEMBIRA</span>
+                    <img src="assets/logo_matematika_gembira.png" alt="Logo Matematika Gembira" class="footer-logo-img-gembira">
                 </div>
                 <p class="footer-desc">
                     Mewujudkan guru sekolah dasar yang kompeten, kreatif, dan inovatif dalam mencerdaskan numerasi anak bangsa di Kota Singkawang.
@@ -1189,7 +1090,6 @@
                 <h4>Navigasi Halaman</h4>
                 <ul>
                     <li><a href="#about">Tentang Kegiatan</a></li>
-                    <li><a href="#jadwal">Agenda & Jadwal</a></li>
                     <li><a href="#narasumber">Profil Narasumber</a></li>
                     <li><a href="#materi">Materi Pelatihan</a></li>
                     <li><a href="#portal">Portal Peserta</a></li>
@@ -1201,16 +1101,10 @@
                 <h4>Hubungi Panitia</h4>
                 <ul>
                     <li>
-                        <i data-lucide="map-pin"></i>
-                        <span>Aula Dinas Pendidikan & Kebudayaan Kota Singkawang, Jl. Firdaus H. Rais No. 23, Singkawang.</span>
-                    </li>
-                    <li>
-                        <i data-lucide="mail"></i>
-                        <span>disdik.singkawang@email.go.id</span>
-                    </li>
-                    <li>
-                        <i data-lucide="phone"></i>
-                        <span>+62 562-123456 (Sekretariat IGI/Disdik)</span>
+                        <a href="https://wa.me/6281258624457" target="_blank" class="footer-contact-link">
+                            <i data-lucide="message-circle" class="wa-color"></i>
+                            <span>+62 812-5862-4457 (Tokimin - Ketua IGI Singkawang)</span>
+                        </a>
                     </li>
                     <li>
                         <i data-lucide="clock"></i>
@@ -1444,55 +1338,49 @@
     </div>
 
     <!-- 3. SPEAKER BIO DETAIL MODAL -->
-    <div class="modal-overlay" id="speaker-modal">
-        <div class="modal-card animate-zoom-in">
-            <div class="modal-header">
-                <h3 id="sp-modal-nama">Detail Narasumber</h3>
-                <button onclick="closeSpeakerModal()" class="btn-close-modal"><i data-lucide="x"></i></button>
-            </div>
-            <div class="modal-body">
-                <div class="speaker-modal-bio-layout">
-                    <div class="sp-modal-avatar" id="sp-modal-svg-avatar">
-                        <!-- Filled by JS -->
-                    </div>
-                    <div class="sp-modal-text">
-                        <h4 id="sp-modal-role">Role</h4>
-                        <div class="sp-modal-section">
-                            <h5>Latar Belakang Pendidikan & Keahlian</h5>
-                            <p id="sp-modal-edu">Education and details</p>
-                        </div>
-                        <div class="sp-modal-section">
-                            <h5>Pengalaman Profesional Utama</h5>
-                            <ul id="sp-modal-experience">
-                                <!-- Filled by JS -->
-                            </ul>
-                        </div>
-                        <div class="sp-modal-section">
-                            <h5>Materi yang Dibawakan pada Pelatihan</h5>
-                            <p id="sp-modal-topic">Topic info</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="modal-footer">
-                <button onclick="closeSpeakerModal()" class="btn btn-secondary">Tutup</button>
-                <button onclick="alert('Mengunduh CV Lengkap...')" class="btn btn-primary"><i data-lucide="download"></i> Unduh CV Lengkap (PDF)</button>
+    <div class="modal-overlay" id="speaker-modal" onclick="if(event.target===this)closeSpeakerModal()">
+        <div class="cv-modal-card animate-zoom-in">
+            <button class="modal-close-btn" onclick="closeSpeakerModal()">
+                <i data-lucide="x"></i>
+            </button>
+            <div id="cv-modal-content">
+                <!-- JS injects full CV HTML here -->
             </div>
         </div>
     </div>
 
-    <!-- 4. YOUTUBE VIDEO POPUP SIMULATOR MODAL -->
-    <div class="modal-overlay" id="video-modal">
-        <div class="modal-card modal-large video-modal-card animate-zoom-in">
+
+
+    <!-- 4. ACCOUNT SETTINGS / CHANGE PIN MODAL -->
+    <div class="modal-overlay" id="settings-modal" onclick="if(event.target===this)closeSettingsModal()">
+        <div class="modal-card animate-zoom-in" style="max-width: 450px;">
             <div class="modal-header">
-                <h3>Video Simulasi & Pembelajaran</h3>
-                <button onclick="closeVideoModal()" class="btn-close-modal"><i data-lucide="x"></i></button>
+                <h3><i data-lucide="settings"></i> Pengaturan Akun</h3>
+                <button onclick="closeSettingsModal()" class="btn-close-modal"><i data-lucide="x"></i></button>
             </div>
-            <div class="modal-body video-modal-body">
-                <!-- Video Simulator Embed Frame -->
-                <div class="iframe-video-wrapper">
-                    <iframe id="video-iframe" src="" title="Video Player" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowfullscreen></iframe>
+            <div class="modal-body">
+                <p style="font-size: 0.85rem; color: var(--color-text-muted); margin-bottom: 20px;">
+                    Ubah PIN keamanan untuk membatasi akses dashboard panitia. PIN default adalah <strong class="gold-text">1234</strong>.
+                </p>
+                
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label for="settings-current-pin" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--color-primary);">PIN Saat Ini</label>
+                    <input type="password" id="settings-current-pin" placeholder="Masukkan PIN saat ini" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); outline: none;">
                 </div>
+                
+                <div class="form-group" style="margin-bottom: 15px; text-align: left;">
+                    <label for="settings-new-pin" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--color-primary);">PIN Baru</label>
+                    <input type="password" id="settings-new-pin" placeholder="Masukkan PIN baru" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); outline: none;">
+                </div>
+                
+                <div class="form-group" style="margin-bottom: 20px; text-align: left;">
+                    <label for="settings-confirm-pin" style="display: block; font-size: 0.85rem; font-weight: 600; margin-bottom: 6px; color: var(--color-primary);">Konfirmasi PIN Baru</label>
+                    <input type="password" id="settings-confirm-pin" placeholder="Konfirmasi PIN baru" style="width: 100%; padding: 10px 12px; border: 1.5px solid var(--color-border); border-radius: var(--radius-sm); outline: none;">
+                </div>
+            </div>
+            <div class="modal-footer" style="padding-top: 15px; border-top: 1px solid var(--color-border); display: flex; justify-content: flex-end; gap: 10px; background-color: transparent;">
+                <button onclick="closeSettingsModal()" class="btn btn-secondary">Batal</button>
+                <button onclick="saveNewPin()" class="btn btn-primary"><i data-lucide="save"></i> Simpan PIN</button>
             </div>
         </div>
     </div>
