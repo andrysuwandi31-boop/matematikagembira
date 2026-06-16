@@ -168,6 +168,13 @@ document.addEventListener('DOMContentLoaded', () => {
                 navMenu.classList.remove('mobile-open');
             });
         });
+        
+        // Close menu when clicking outside (mobile)
+        document.addEventListener('click', (e) => {
+            if (navMenu.classList.contains('mobile-open') && !navMenu.contains(e.target) && !menuBtn.contains(e.target)) {
+                navMenu.classList.remove('mobile-open');
+            }
+        });
     }
     
     // Scroll Reveal Intersection Observer
@@ -1273,7 +1280,7 @@ function renderTestimonials() {
     container.innerHTML = '';
     
     testimonialsDb.forEach(t => {
-        const initials = t.name ? t.name.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase() : 'P';
+        const initials = 'A';
         const card = document.createElement('div');
         card.className = 'testimonial-card';
         card.innerHTML = `
@@ -1281,11 +1288,10 @@ function renderTestimonials() {
             <div class="testimonial-author">
                 <div class="testimonial-avatar">${initials}</div>
                 <div class="testimonial-info">
-                    <div class="testimonial-name">${t.name}</div>
+                    <div class="testimonial-name">Anonim</div>
                     <div class="testimonial-school">${t.school}, ${t.district}</div>
                 </div>
             </div>
-            <div class="testimonial-date">${t.date}</div>
         `;
         container.appendChild(card);
     });
