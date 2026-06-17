@@ -621,9 +621,20 @@ Format keluaran HARUS berupa objek JSON mentah saja, tanpa pembungkus markdown s
     }
     
     // Save report to database
+    const idInput = document.getElementById('rep-participant-id');
+    const participantId = idInput && idInput.value ? parseInt(idInput.value) : null;
+    let pId = participantId;
+    if (!pId) {
+        const match = participantState.participants.find(p => p.name.toLowerCase().trim() === nama.toLowerCase().trim() && p.school.toLowerCase().trim() === sekolah.toLowerCase().trim());
+        if (match) {
+            pId = match.id;
+        }
+    }
+
     const newReport = {
         id: Date.now(),
         timestamp: Date.now(),
+        participantId: pId,
         nama,
         nip,
         sekolah,
@@ -638,14 +649,15 @@ Format keluaran HARUS berupa objek JSON mentah saja, tanpa pembungkus markdown s
     localStorage.setItem('last_report_name', nama);
     
     // Add testimonial
-    await submitAutoTestimonial(nama, sekolah, kecamatan, kesan);
+    await submitAutoTestimonial(nama, sekolah, kecamatan, kesan, pId);
     
     // Increment report generation counter in global state & update dashboard
     participantState.reportsGenerated += 1;
     updateDashboardStats();
     
     // Toggle status in dashboard table for matching name
-    const matchingParticipant = participantState.participants.find(p => p.name.toLowerCase().includes(nama.toLowerCase()) || nama.toLowerCase().includes(p.name.toLowerCase()));
+    const matchingParticipant = participantState.participants.find(p => p.id === pId) || 
+                                 participantState.participants.find(p => p.name.toLowerCase().includes(nama.toLowerCase()) || nama.toLowerCase().includes(p.name.toLowerCase()));
     if (matchingParticipant) {
         matchingParticipant.reportStatus = "Sudah Dibuat";
         renderDashboardTable();
@@ -1270,13 +1282,22 @@ async function saveReportData(report) {
     renderReportHistory();
 }
 
-async function submitAutoTestimonial(nama, sekolah, kecamatan, kesan) {
+async function submitAutoTestimonial(nama, sekolah, kecamatan, kesan, participantId = null) {
     // Avoid duplicates for the same name and school
     const isTestiDuplicate = testimonialsDb.some(t => t.name === nama && t.school === sekolah);
     if (isTestiDuplicate) return;
 
+    let pId = participantId;
+    if (!pId) {
+        const match = participantState.participants.find(p => p.name.toLowerCase().trim() === nama.toLowerCase().trim() && p.school.toLowerCase().trim() === sekolah.toLowerCase().trim());
+        if (match) {
+            pId = match.id;
+        }
+    }
+
     const newTesti = {
         id: Date.now(),
+        participantId: pId,
         name: nama,
         school: sekolah,
         district: kecamatan,
@@ -1527,7 +1548,9 @@ function renderRepSearchableDropdown() {
     if (!listContainer) return;
 
     listContainer.innerHTML = '';
-    const sortedParticipants = [...participantState.participants].sort((a, b) => a.name.localeCompare(b.name));
+    const sortedParticipants = [...participantState.participants]
+        .filter(p => p.status !== 'Nonaktif')
+        .sort((a, b) => a.name.localeCompare(b.name));
     
     sortedParticipants.forEach(p => {
         const item = document.createElement('div');
@@ -1585,6 +1608,7 @@ function selectRepParticipant(id, name, nip, school, district) {
     const nipInput = document.getElementById('rep-nip');
     const schoolInput = document.getElementById('rep-sekolah');
     const districtInput = document.getElementById('rep-kecamatan');
+    const idInput = document.getElementById('rep-participant-id');
     
     if (searchInput && hiddenInput && nipInput && schoolInput && districtInput) {
         searchInput.value = name;
@@ -1592,6 +1616,9 @@ function selectRepParticipant(id, name, nip, school, district) {
         nipInput.value = nip;
         schoolInput.value = school;
         districtInput.value = district;
+        if (idInput) {
+            idInput.value = id;
+        }
     }
 }
 
@@ -2250,8 +2277,17 @@ async function saveNewPin() {
 async function updateDashboardStats() {
     const s = participantState;
     const totalParticipants = s.participants.length;
+    const activeParticipants = s.participants.filter(p => p.status !== 'Nonaktif').length;
+    const inactiveParticipants = s.participants.filter(p => p.status === 'Nonaktif').length;
     
     const totalEl = document.getElementById('stat-total-peserta');
+    const activeEl = document.getElementById('stat-active-peserta');
+    const inactiveEl = document.getElementById('stat-inactive-peserta');
+
+    const mgmtTotalEl = document.getElementById('mgmt-stat-total');
+    const mgmtAktifEl = document.getElementById('mgmt-stat-aktif');
+    const mgmtNonaktifEl = document.getElementById('mgmt-stat-nonaktif');
+
     const hadirEl = document.getElementById('stat-hadir');
     const izinEl = document.getElementById('stat-izin');
     const sakitEl = document.getElementById('stat-sakit');
@@ -2283,9 +2319,16 @@ async function updateDashboardStats() {
     const countIzin = activeDayRecords.filter(p => p.status === 'Izin').length;
     const countSakit = activeDayRecords.filter(p => p.status === 'Sakit').length;
     const countTotal = activeDayRecords.length;
-    const countBelum = Math.max(0, totalParticipants - countTotal);
+    const countBelum = Math.max(0, activeParticipants - countTotal);
 
     if (totalEl) totalEl.innerText = totalParticipants;
+    if (activeEl) activeEl.innerText = `${activeParticipants} Aktif`;
+    if (inactiveEl) inactiveEl.innerText = `${inactiveParticipants} Nonaktif`;
+
+    if (mgmtTotalEl) mgmtTotalEl.innerHTML = `Total: <b>${totalParticipants}</b> peserta`;
+    if (mgmtAktifEl) mgmtAktifEl.innerHTML = `Aktif: <b>${activeParticipants}</b>`;
+    if (mgmtNonaktifEl) mgmtNonaktifEl.innerHTML = `Nonaktif: <b>${inactiveParticipants}</b>`;
+
     if (hadirEl) hadirEl.innerText = countHadir;
     if (izinEl) izinEl.innerText = countIzin;
     if (sakitEl) sakitEl.innerText = countSakit;
@@ -2297,6 +2340,20 @@ async function updateDashboardStats() {
     if (izinTitle) izinTitle.innerText = `Total Izin (${activeDayLabel})`;
     if (sakitTitle) sakitTitle.innerText = `Total Sakit (${activeDayLabel})`;
     if (belumTitle) belumTitle.innerText = `Belum Presensi (${activeDayLabel})`;
+
+    // Update sync status panel elements based on current server mode
+    const syncStatus = isServerMode ? "Server" : "Offline";
+    const syncDbEl = document.getElementById('sync-db');
+    const syncPresensiEl = document.getElementById('sync-presensi');
+    const syncLaporanEl = document.getElementById('sync-laporan');
+    const syncStatistikEl = document.getElementById('sync-statistik');
+    const syncPortalEl = document.getElementById('sync-portal');
+
+    if (syncDbEl) syncDbEl.innerHTML = `✅ Database Peserta (${syncStatus})`;
+    if (syncPresensiEl) syncPresensiEl.innerHTML = `✅ Presensi (${syncStatus})`;
+    if (syncLaporanEl) syncLaporanEl.innerHTML = `✅ Laporan Pelatihan (${syncStatus})`;
+    if (syncStatistikEl) syncStatistikEl.innerHTML = `✅ Statistik (${syncStatus})`;
+    if (syncPortalEl) syncPortalEl.innerHTML = `✅ Portal Peserta (${syncStatus})`;
 }
 
 // Initialize Charts inside Dashboard
@@ -2476,7 +2533,9 @@ function renderPublicDirectoryTable() {
     
     tbody.innerHTML = '';
     
-    participantState.participants.forEach((p, idx) => {
+    const activeParticipants = participantState.participants.filter(p => p.status !== 'Nonaktif');
+    
+    activeParticipants.forEach((p, idx) => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
             <td>${idx + 1}</td>
@@ -3160,8 +3219,10 @@ function renderSearchableDropdown() {
 
     listContainer.innerHTML = '';
     
-    // Sort participants by name alphabetically
-    const sortedParticipants = [...participantState.participants].sort((a, b) => a.name.localeCompare(b.name));
+    // Sort participants by name alphabetically, excluding "Nonaktif"
+    const sortedParticipants = [...participantState.participants]
+        .filter(p => p.status !== 'Nonaktif')
+        .sort((a, b) => a.name.localeCompare(b.name));
     
     sortedParticipants.forEach(p => {
         const item = document.createElement('div');
@@ -4909,9 +4970,11 @@ function filterAndRenderParticipantTable() {
     // Update stats bar
     const totalEl = document.getElementById('mgmt-stat-total');
     const aktifEl = document.getElementById('mgmt-stat-aktif');
+    const nonaktifEl = document.getElementById('mgmt-stat-nonaktif');
     const filteredEl = document.getElementById('mgmt-stat-filtered');
     if (totalEl) totalEl.innerHTML = `Total: <b>${participantState.participants.length}</b> peserta`;
-    if (aktifEl) aktifEl.innerHTML = `Aktif: <b>${participantState.participants.filter(p => p.status === 'Aktif').length}</b>`;
+    if (aktifEl) aktifEl.innerHTML = `Aktif: <b>${participantState.participants.filter(p => p.status !== 'Nonaktif').length}</b>`;
+    if (nonaktifEl) nonaktifEl.innerHTML = `Nonaktif: <b>${participantState.participants.filter(p => p.status === 'Nonaktif').length}</b>`;
     if (filteredEl) filteredEl.innerHTML = `Ditampilkan: <b>${mgmtFilteredParticipants.length}</b>`;
 
     mgmtCurrentPage = 1;
@@ -5081,7 +5144,7 @@ async function saveParticipant(event) {
             });
 
             if (res.status === 409) {
-                showToast('Data peserta ini sudah ada (duplikat).', 'alert-circle');
+                showToast('Peserta sudah terdaftar dalam sistem.', 'alert-circle');
                 return;
             }
             if (!res.ok) {
@@ -5100,10 +5163,20 @@ async function saveParticipant(event) {
             }
         } catch (e) {
             showToast('Koneksi server gagal, menyimpan ke lokal...', 'wifi-off');
-            localSaveParticipant(isEdit, id, payload);
+            try {
+                localSaveParticipant(isEdit, id, payload);
+            } catch (localErr) {
+                showToast(localErr.message || 'Gagal menyimpan data.', 'alert-circle');
+                return;
+            }
         }
     } else {
-        localSaveParticipant(isEdit, id, payload);
+        try {
+            localSaveParticipant(isEdit, id, payload);
+        } catch (localErr) {
+            showToast(localErr.message || 'Gagal menyimpan data.', 'alert-circle');
+            return;
+        }
     }
 
     closeParticipantFormModal();
@@ -5112,17 +5185,78 @@ async function saveParticipant(event) {
 }
 
 function localSaveParticipant(isEdit, id, payload) {
+    const participants = participantState.participants;
+    
+    // Check Nama + Sekolah duplicate
+    const isNameSchoolDuplicate = participants.some(
+        p => (!isEdit || p.id !== parseInt(id)) &&
+             p.name.toLowerCase().trim() === payload.name.toLowerCase().trim() &&
+             p.school.toLowerCase().trim() === payload.school.toLowerCase().trim()
+    );
+    // Check Email duplicate
+    const isEmailDuplicate = payload.email && payload.email.trim() !== '' && participants.some(
+        p => (!isEdit || p.id !== parseInt(id)) &&
+             p.email && p.email.toLowerCase().trim() === payload.email.toLowerCase().trim()
+    );
+
+    if (isNameSchoolDuplicate || isEmailDuplicate) {
+        throw new Error("Peserta sudah terdaftar dalam sistem.");
+    }
+
     if (isEdit) {
-        const idx = participantState.participants.findIndex(p => p.id === parseInt(id));
-        if (idx !== -1) participantState.participants[idx] = { ...participantState.participants[idx], ...payload };
+        const idx = participants.findIndex(p => p.id === parseInt(id));
+        if (idx !== -1) {
+            const oldName = participants[idx].name;
+            const oldSchool = participants[idx].school;
+            const targetId = parseInt(id);
+
+            participants[idx] = { ...participants[idx], ...payload };
+
+            // Local cascading updates:
+            // 1. Update presenceDb (matching participantId)
+            presenceDb.forEach(p => {
+                if (p.participantId === targetId) {
+                    p.name = payload.name;
+                    p.school = payload.school;
+                    p.district = payload.district;
+                    p.email = payload.email;
+                    p.phone = payload.phone;
+                }
+            });
+            localStorage.setItem('presence_db', JSON.stringify(presenceDb));
+
+            // 2. Update reportsDb (matching participantId or old name+school)
+            reportsDb.forEach(r => {
+                if (r.participantId === targetId || (r.nama.toLowerCase().trim() === oldName.toLowerCase().trim() && r.sekolah.toLowerCase().trim() === oldSchool.toLowerCase().trim())) {
+                    r.participantId = targetId;
+                    r.nama = payload.name;
+                    r.nip = payload.nip;
+                    r.sekolah = payload.school;
+                    r.kecamatan = payload.district;
+                }
+            });
+            localStorage.setItem('reports_db', JSON.stringify(reportsDb));
+
+            // 3. Update testimonialsDb (matching participantId or old name+school)
+            testimonialsDb.forEach(t => {
+                if (t.participantId === targetId || (t.name.toLowerCase().trim() === oldName.toLowerCase().trim() && t.school.toLowerCase().trim() === oldSchool.toLowerCase().trim())) {
+                    t.participantId = targetId;
+                    t.name = payload.name;
+                    t.school = payload.school;
+                    t.district = payload.district;
+                }
+            });
+            localStorage.setItem('testimonials_db', JSON.stringify(testimonialsDb));
+        }
     } else {
-        const maxId = participantState.participants.reduce((max, p) => Math.max(max, p.id || 0), 0);
-        participantState.participants.push({
+        const maxId = participants.reduce((max, p) => Math.max(max, p.id || 0), 0);
+        const newParticipant = {
             id: maxId + 1,
             dateAdded: new Date().toISOString().slice(0, 10),
             reportStatus: 'Belum Dibuat',
             ...payload
-        });
+        };
+        participants.push(newParticipant);
     }
     saveParticipantsToLocalStorage();
 }
@@ -5148,6 +5282,9 @@ async function confirmDeleteParticipant() {
     const id = participantToDeleteId;
     closeConfirmDeleteModal();
 
+    let serverModeSuccess = false;
+    let modeDeleted = 'hard-deleted';
+
     if (isServerMode) {
         try {
             const email = sessionStorage.getItem('admin_email');
@@ -5159,7 +5296,11 @@ async function confirmDeleteParticipant() {
                     'x-admin-pin': pin
                 }
             });
-            if (!res.ok) {
+            if (res.ok) {
+                const resJson = await res.json();
+                modeDeleted = resJson.mode; // 'soft-deleted' or 'hard-deleted'
+                serverModeSuccess = true;
+            } else {
                 showToast('Gagal menghapus peserta dari server.', 'alert-circle');
                 return;
             }
@@ -5168,10 +5309,45 @@ async function confirmDeleteParticipant() {
         }
     }
 
-    participantState.participants = participantState.participants.filter(p => p.id !== id);
-    saveParticipantsToLocalStorage();
+    if (serverModeSuccess) {
+        if (modeDeleted === 'soft-deleted') {
+            const idx = participantState.participants.findIndex(p => p.id === id);
+            if (idx !== -1) {
+                participantState.participants[idx].status = 'Nonaktif';
+            }
+        } else {
+            participantState.participants = participantState.participants.filter(p => p.id !== id);
+        }
+        saveParticipantsToLocalStorage();
+    } else {
+        // Standalone or Server offline mode: check history locally
+        const record = participantState.participants.find(p => p.id === id);
+        if (record) {
+            const hasPresence = presenceDb.some(p => p.participantId === id);
+            const hasReports = reportsDb.some(r => r.participantId === id || (r.nama.toLowerCase().trim() === record.name.toLowerCase().trim() && r.sekolah.toLowerCase().trim() === record.school.toLowerCase().trim()));
+            
+            if (hasPresence || hasReports) {
+                // Soft delete
+                const idx = participantState.participants.findIndex(p => p.id === id);
+                if (idx !== -1) {
+                    participantState.participants[idx].status = 'Nonaktif';
+                    modeDeleted = 'soft-deleted';
+                }
+            } else {
+                // Hard delete
+                participantState.participants = participantState.participants.filter(p => p.id !== id);
+                modeDeleted = 'hard-deleted';
+            }
+            saveParticipantsToLocalStorage();
+        }
+    }
+
     refreshAllParticipantDependents();
-    showToast('Peserta berhasil dihapus.', 'trash-2');
+    if (modeDeleted === 'soft-deleted') {
+        showToast('Status peserta diubah menjadi Nonaktif karena memiliki riwayat.', 'info');
+    } else {
+        showToast('Peserta berhasil dihapus.', 'trash-2');
+    }
 }
 
 // -----------------------------------------------
@@ -5215,9 +5391,11 @@ function handleExcelImport(event) {
                 email: findVal(row, colMap.email)
             })).filter(r => r.name || r.school);
 
-            // Check which ones are duplicates
+            // Check which ones are duplicates / updates
             const existingKeys = new Set(participantState.participants.map(p => `${p.name?.toLowerCase()}|${p.school?.toLowerCase()}`));
-            let validCount = 0;
+            const existingEmails = new Set(participantState.participants.filter(p => p.email).map(p => p.email.toLowerCase()));
+            let newImportCount = 0;
+            let updateCount = 0;
             let skipCount = 0;
 
             const previewBody = document.getElementById('import-preview-body');
@@ -5226,12 +5404,39 @@ function handleExcelImport(event) {
 
             importPreviewData.forEach((row, i) => {
                 const key = `${row.name?.toLowerCase()}|${row.school?.toLowerCase()}`;
-                const isDup = existingKeys.has(key) || !row.name || !row.school;
-                if (isDup) skipCount++;
-                else validCount++;
+                const hasKey = existingKeys.has(key);
+                
+                let isSkip = false;
+                let statusText = 'Import';
+                let badgeClass = 'mgmt-badge-aktif';
+                let rowClass = '';
+
+                if (!row.name || !row.school || !row.district) {
+                    isSkip = true;
+                    statusText = 'Data Tidak Lengkap';
+                    badgeClass = 'mgmt-badge-nonaktif';
+                    rowClass = 'import-row-duplicate';
+                    skipCount++;
+                } else if (hasKey) {
+                    statusText = 'Update';
+                    badgeClass = 'mgmt-badge-aktif';
+                    rowClass = '';
+                    updateCount++;
+                } else {
+                    const emailKey = row.email?.toLowerCase();
+                    if (emailKey && existingEmails.has(emailKey)) {
+                        isSkip = true;
+                        statusText = 'Email Duplikat';
+                        badgeClass = 'mgmt-badge-nonaktif';
+                        rowClass = 'import-row-duplicate';
+                        skipCount++;
+                    } else {
+                        newImportCount++;
+                    }
+                }
 
                 const tr = document.createElement('tr');
-                tr.className = isDup ? 'import-row-duplicate' : '';
+                if (rowClass) tr.className = rowClass;
                 tr.innerHTML = `
                     <td>${i + 1}</td>
                     <td>${row.name || '<i>kosong</i>'}</td>
@@ -5240,13 +5445,13 @@ function handleExcelImport(event) {
                     <td>${row.district || '-'}</td>
                     <td>${row.phone || '-'}</td>
                     <td>${row.email || '-'}</td>
-                    <td><span class="mgmt-status-badge ${isDup ? 'mgmt-badge-nonaktif' : 'mgmt-badge-aktif'}">${isDup ? 'Lewati' : 'Import'}</span></td>
+                    <td><span class="mgmt-status-badge ${badgeClass}">${statusText}</span></td>
                 `;
                 previewBody.appendChild(tr);
             });
 
-            document.getElementById('import-count-valid').innerHTML = `Data valid: <b>${validCount}</b>`;
-            document.getElementById('import-count-skip').innerHTML = `Duplikat/Kosong: <b>${skipCount}</b>`;
+            document.getElementById('import-count-valid').innerHTML = `Import Baru: <b>${newImportCount}</b>, Update: <b>${updateCount}</b>`;
+            document.getElementById('import-count-skip').innerHTML = `Dilewati: <b>${skipCount}</b>`;
 
             document.getElementById('import-preview-modal').classList.add('active');
             lucide.createIcons();
@@ -5326,31 +5531,116 @@ async function executeImport() {
 function localImportParticipants() {
     let successCount = 0;
     let skipCount = 0;
-    const existingKeys = new Set(participantState.participants.map(p => `${(p.name || '').toLowerCase()}|${(p.school || '').toLowerCase()}`));
-    let maxId = participantState.participants.reduce((max, p) => Math.max(max, p.id || 0), 0);
+    const participants = participantState.participants;
+    let maxId = participants.reduce((max, p) => Math.max(max, p.id || 0), 0);
+
+    let presenceUpdated = false;
+    let reportsUpdated = false;
+    let testimonialsUpdated = false;
 
     importPreviewData.forEach(row => {
-        if (!row.name || !row.school) { skipCount++; return; }
-        const key = `${row.name.toLowerCase()}|${row.school.toLowerCase()}`;
-        if (existingKeys.has(key)) { skipCount++; return; }
-        maxId++;
-        participantState.participants.push({
-            id: maxId,
-            name: row.name.trim(),
-            nip: row.nip || '',
-            school: row.school.trim(),
-            district: row.district || '',
-            phone: row.phone || '',
-            email: row.email || '',
-            status: 'Aktif',
-            dateAdded: new Date().toISOString().slice(0, 10),
-            reportStatus: 'Belum Dibuat'
-        });
-        existingKeys.add(key);
-        successCount++;
+        if (!row.name || !row.school || !row.district) {
+            skipCount++;
+            return;
+        }
+
+        const name = row.name.trim();
+        const school = row.school.trim();
+        const district = row.district.trim();
+        const nip = (row.nip || '').trim();
+        const phone = (row.phone || '').trim();
+        const email = (row.email || '').trim();
+
+        // Check for duplicate Name + School
+        const existingIdx = participants.findIndex(
+            p => p.name.toLowerCase().trim() === name.toLowerCase().trim() &&
+                 p.school.toLowerCase().trim() === school.toLowerCase().trim()
+        );
+
+        if (existingIdx !== -1) {
+            // Update existing participant details (Upsert)
+            const oldParticipant = participants[existingIdx];
+            const id = oldParticipant.id;
+
+            participants[existingIdx] = {
+                ...oldParticipant,
+                name: name,
+                school: school,
+                district: district,
+                nip: nip || oldParticipant.nip,
+                phone: phone || oldParticipant.phone,
+                email: email || oldParticipant.email,
+                status: 'Aktif' // Reactivate if was Nonaktif
+            };
+
+            // Cascade updates to presenceDb
+            presenceDb.forEach(p => {
+                if (p.participantId === id) {
+                    p.name = name;
+                    p.school = school;
+                    p.district = district;
+                    p.email = email || p.email;
+                    p.phone = phone || p.phone;
+                    presenceUpdated = true;
+                }
+            });
+
+            // Cascade updates to reportsDb
+            reportsDb.forEach(r => {
+                if (r.participantId === id || (r.nama.toLowerCase().trim() === oldParticipant.name.toLowerCase().trim() && r.sekolah.toLowerCase().trim() === oldParticipant.school.toLowerCase().trim())) {
+                    r.participantId = id;
+                    r.nama = name;
+                    r.nip = nip || r.nip;
+                    r.sekolah = school;
+                    r.kecamatan = district;
+                    reportsUpdated = true;
+                }
+            });
+
+            // Cascade updates to testimonialsDb
+            testimonialsDb.forEach(t => {
+                if (t.participantId === id || (t.name.toLowerCase().trim() === oldParticipant.name.toLowerCase().trim() && t.school.toLowerCase().trim() === oldParticipant.school.toLowerCase().trim())) {
+                    t.participantId = id;
+                    t.name = name;
+                    t.school = school;
+                    t.district = district;
+                    testimonialsUpdated = true;
+                }
+            });
+
+            successCount++;
+        } else {
+            // Check for duplicate Email among all active/inactive participants
+            const isEmailDuplicate = email && email !== '' && participants.some(
+                p => p.email && p.email.toLowerCase().trim() === email.toLowerCase().trim()
+            );
+            if (isEmailDuplicate) {
+                skipCount++;
+                return;
+            }
+
+            maxId++;
+            participants.push({
+                id: maxId,
+                name: name,
+                nip: nip,
+                school: school,
+                district: district,
+                phone: phone,
+                email: email,
+                status: 'Aktif',
+                dateAdded: new Date().toISOString().slice(0, 10),
+                reportStatus: 'Belum Dibuat'
+            });
+            successCount++;
+        }
     });
 
     saveParticipantsToLocalStorage();
+    if (presenceUpdated) localStorage.setItem('presence_db', JSON.stringify(presenceDb));
+    if (reportsUpdated) localStorage.setItem('reports_db', JSON.stringify(reportsDb));
+    if (testimonialsUpdated) localStorage.setItem('testimonials_db', JSON.stringify(testimonialsDb));
+
     closeImportPreviewModal();
     refreshAllParticipantDependents();
     showToast(`Berhasil import ${successCount} peserta! (${skipCount} dilewati)`, 'check-circle');

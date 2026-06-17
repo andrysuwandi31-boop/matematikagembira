@@ -612,12 +612,19 @@ const server = http.createServer((req, res) => {
             }
 
             const participants = readJSON(PARTICIPANTS_FILE);
-            const isDuplicate = participants.some(
+            
+            // Check for Name + School duplicate
+            const isNameSchoolDuplicate = participants.some(
                 p => p.name.toLowerCase().trim() === name.toLowerCase().trim() &&
                      p.school.toLowerCase().trim() === school.toLowerCase().trim()
             );
-            if (isDuplicate) {
-                return res.status(409).json({ error: 'Data peserta sudah tersedia.' });
+            // Check for Email duplicate (if email is provided)
+            const isEmailDuplicate = email && email.trim() !== '' && participants.some(
+                p => p.email && p.email.toLowerCase().trim() === email.toLowerCase().trim()
+            );
+
+            if (isNameSchoolDuplicate || isEmailDuplicate) {
+                return res.status(409).json({ error: 'Peserta sudah terdaftar dalam sistem.' });
             }
 
             const jkt = getJakartaDateTime();
@@ -657,7 +664,25 @@ const server = http.createServer((req, res) => {
                 return res.status(404).json({ error: 'Peserta tidak ditemukan.' });
             }
 
+            // Check for Name + School duplicate (excluding current participant)
+            const isNameSchoolDuplicate = participants.some(
+                p => p.id !== id &&
+                     p.name.toLowerCase().trim() === name.toLowerCase().trim() &&
+                     p.school.toLowerCase().trim() === school.toLowerCase().trim()
+            );
+            // Check for Email duplicate (excluding current participant)
+            const isEmailDuplicate = email && email.trim() !== '' && participants.some(
+                p => p.id !== id &&
+                     p.email && p.email.toLowerCase().trim() === email.toLowerCase().trim()
+            );
+
+            if (isNameSchoolDuplicate || isEmailDuplicate) {
+                return res.status(409).json({ error: 'Peserta sudah terdaftar dalam sistem.' });
+            }
+
             const oldName = participants[idx].name;
+            const oldSchool = participants[idx].school;
+
             participants[idx] = {
                 ...participants[idx],
                 name: name.trim(),
@@ -670,7 +695,58 @@ const server = http.createServer((req, res) => {
             };
 
             writeJSON(PARTICIPANTS_FILE, participants);
-            writeServerLog(`Admin mengedit data peserta: [${oldName}] → [${name.trim()}] dari ${school.trim()}.`);
+
+            // Cascade updates to presence.json
+            let presence = readJSON(PRESENCE_FILE);
+            let presenceUpdated = false;
+            presence.forEach(p => {
+                if (p.participantId === id) {
+                    p.name = name.trim();
+                    p.school = school.trim();
+                    p.district = district.trim();
+                    p.email = (email || '').trim();
+                    p.phone = (phone || '').trim();
+                    presenceUpdated = true;
+                }
+            });
+            if (presenceUpdated) {
+                writeJSON(PRESENCE_FILE, presence);
+            }
+
+            // Cascade updates to reports.json
+            let reports = readJSON(REPORTS_FILE);
+            let reportsUpdated = false;
+            reports.forEach(r => {
+                if (r.participantId === id || (r.nama.toLowerCase().trim() === oldName.toLowerCase().trim() && r.sekolah.toLowerCase().trim() === oldSchool.toLowerCase().trim())) {
+                    r.participantId = id;
+                    r.nama = name.trim();
+                    r.nip = (nip || '').trim();
+                    r.sekolah = school.trim();
+                    r.kecamatan = district.trim();
+                    reportsUpdated = true;
+                }
+            });
+            if (reportsUpdated) {
+                writeJSON(REPORTS_FILE, reports);
+            }
+
+            // Cascade updates to testimonials.json
+            let testimonials = readJSON(TESTIMONIALS_FILE);
+            let testimonialsUpdated = false;
+            testimonials.forEach(t => {
+                if (t.participantId === id || (t.name.toLowerCase().trim() === oldName.toLowerCase().trim() && t.school.toLowerCase().trim() === oldSchool.toLowerCase().trim())) {
+                    t.participantId = id;
+                    t.name = name.trim();
+                    t.school = school.trim();
+                    t.district = district.trim();
+                    testimonialsUpdated = true;
+                }
+            });
+            if (testimonialsUpdated) {
+                writeJSON(TESTIMONIALS_FILE, testimonials);
+            }
+
+            writeServerLog(`Admin mengedit data peserta: [${oldName}] → [${name.trim()}] dari ${school.trim()} (Dan memperbarui rekap terkait).`);
 
             res.json(participants[idx]);
         }
@@ -678,17 +754,34 @@ const server = http.createServer((req, res) => {
             const id = parseInt(pathname.substring(18));
 
             const participants = readJSON(PARTICIPANTS_FILE);
-            const record = participants.find(p => p.id === id);
+            const recordIdx = participants.findIndex(p => p.id === id);
 
-            if (!record) {
+            if (recordIdx === -1) {
                 return res.status(404).json({ error: 'Peserta tidak ditemukan.' });
             }
 
-            const filtered = participants.filter(p => p.id !== id);
-            writeJSON(PARTICIPANTS_FILE, filtered);
-            writeServerLog(`Admin menghapus peserta: [${record.name}] dari ${record.school}.`);
-
-            res.json({ success: true });
+            const record = participants[recordIdx];
+            
+            // Check if participant has history in presence or reports
+            const presence = readJSON(PRESENCE_FILE);
+            const reports = readJSON(REPORTS_FILE);
+            
+            const hasPresence = presence.some(p => p.participantId === id);
+            const hasReports = reports.some(r => r.participantId === id || (r.nama.toLowerCase().trim() === record.name.toLowerCase().trim() && r.sekolah.toLowerCase().trim() === record.school.toLowerCase().trim()));
+            
+            if (hasPresence || hasReports) {
+                // Soft delete: change status to Nonaktif
+                participants[recordIdx].status = 'Nonaktif';
+                writeJSON(PARTICIPANTS_FILE, participants);
+                writeServerLog(`Admin menonaktifkan peserta (memiliki histori): [${record.name}] dari ${record.school}.`);
+                res.json({ success: true, mode: 'soft-deleted' });
+            } else {
+                // Hard delete: remove entirely
+                const filtered = participants.filter(p => p.id !== id);
+                writeJSON(PARTICIPANTS_FILE, filtered);
+                writeServerLog(`Admin menghapus peserta secara permanen (tanpa histori): [${record.name}] dari ${record.school}.`);
+                res.json({ success: true, mode: 'hard-deleted' });
+            }
         }
         else if (pathname === '/api/participants/import' && method === 'POST') {
             const { rows } = req.body;
@@ -705,42 +798,121 @@ const server = http.createServer((req, res) => {
             let skipCount = 0;
             const skippedNames = [];
 
+            let presence = readJSON(PRESENCE_FILE);
+            let reports = readJSON(REPORTS_FILE);
+            let testimonials = readJSON(TESTIMONIALS_FILE);
+
+            let presenceUpdated = false;
+            let reportsUpdated = false;
+            let testimonialsUpdated = false;
+
             rows.forEach(row => {
                 if (!row.name || !row.school || !row.district) {
                     skipCount++;
-                    skippedNames.push(row.name || '(tanpa nama)');
+                    skippedNames.push((row.name || '(tanpa nama)') + ' (Data tidak lengkap)');
                     return;
                 }
 
-                const isDuplicate = participants.some(
-                    p => p.name.toLowerCase().trim() === row.name.toLowerCase().trim() &&
-                         p.school.toLowerCase().trim() === row.school.toLowerCase().trim()
+                const name = row.name.trim();
+                const school = row.school.trim();
+                const district = row.district.trim();
+                const nip = (row.nip || '').trim();
+                const phone = (row.phone || '').trim();
+                const email = (row.email || '').trim();
+
+                // Check for duplicate Name + School
+                const existingIdx = participants.findIndex(
+                    p => p.name.toLowerCase().trim() === name.toLowerCase().trim() &&
+                         p.school.toLowerCase().trim() === school.toLowerCase().trim()
                 );
 
-                if (isDuplicate) {
-                    skipCount++;
-                    skippedNames.push(row.name);
-                    return;
-                }
+                if (existingIdx !== -1) {
+                    // Update existing participant details (Upsert)
+                    const oldParticipant = participants[existingIdx];
+                    const id = oldParticipant.id;
 
-                maxId++;
-                participants.push({
-                    id: maxId,
-                    name: row.name.trim(),
-                    nip: (row.nip || '').trim(),
-                    school: row.school.trim(),
-                    district: row.district.trim(),
-                    phone: (row.phone || '').trim(),
-                    email: (row.email || '').trim(),
-                    status: 'Aktif',
-                    dateAdded: jkt.dateString,
-                    reportStatus: 'Belum Dibuat'
-                });
-                successCount++;
+                    participants[existingIdx] = {
+                        ...oldParticipant,
+                        name: name,
+                        school: school,
+                        district: district,
+                        nip: nip || oldParticipant.nip,
+                        phone: phone || oldParticipant.phone,
+                        email: email || oldParticipant.email,
+                        status: 'Aktif' // Reactivate if was Nonaktif
+                    };
+
+                    // Cascade updates to presence.json
+                    presence.forEach(p => {
+                        if (p.participantId === id) {
+                            p.name = name;
+                            p.school = school;
+                            p.district = district;
+                            p.email = email || p.email;
+                            p.phone = phone || p.phone;
+                            presenceUpdated = true;
+                        }
+                    });
+
+                    // Cascade updates to reports.json
+                    reports.forEach(r => {
+                        if (r.participantId === id || (r.nama.toLowerCase().trim() === oldParticipant.name.toLowerCase().trim() && r.sekolah.toLowerCase().trim() === oldParticipant.school.toLowerCase().trim())) {
+                            r.participantId = id;
+                            r.nama = name;
+                            r.nip = nip || r.nip;
+                            r.sekolah = school;
+                            r.kecamatan = district;
+                            reportsUpdated = true;
+                        }
+                    });
+
+                    // Cascade updates to testimonials.json
+                    testimonials.forEach(t => {
+                        if (t.participantId === id || (t.name.toLowerCase().trim() === oldParticipant.name.toLowerCase().trim() && t.school.toLowerCase().trim() === oldParticipant.school.toLowerCase().trim())) {
+                            t.participantId = id;
+                            t.name = name;
+                            t.school = school;
+                            t.district = district;
+                            testimonialsUpdated = true;
+                        }
+                    });
+
+                    successCount++;
+                } else {
+                    // Check for duplicate Email among all active/inactive participants
+                    const isEmailDuplicate = email && email !== '' && participants.some(
+                        p => p.email && p.email.toLowerCase().trim() === email.toLowerCase().trim()
+                    );
+                    if (isEmailDuplicate) {
+                        skipCount++;
+                        skippedNames.push(name + ' (Email Duplikat)');
+                        return;
+                    }
+
+                    maxId++;
+                    participants.push({
+                        id: maxId,
+                        name: name,
+                        nip: nip,
+                        school: school,
+                        district: district,
+                        phone: phone,
+                        email: email,
+                        status: 'Aktif',
+                        dateAdded: jkt.dateString,
+                        reportStatus: 'Belum Dibuat'
+                    });
+                    successCount++;
+                }
             });
 
             writeJSON(PARTICIPANTS_FILE, participants);
-            writeServerLog(`Admin mengimpor ${successCount} peserta baru (${skipCount} dilewati karena duplikat/tidak valid).`);
+            
+            if (presenceUpdated) writeJSON(PRESENCE_FILE, presence);
+            if (reportsUpdated) writeJSON(REPORTS_FILE, reports);
+            if (testimonialsUpdated) writeJSON(TESTIMONIALS_FILE, testimonials);
+
+            writeServerLog(`Admin mengimpor/upsert ${successCount} data peserta (${skipCount} dilewati).`);
 
             res.status(201).json({
                 success: true,

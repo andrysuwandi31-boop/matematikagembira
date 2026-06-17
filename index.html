@@ -1208,6 +1208,20 @@
                     </div>
                 </div>
 
+                <!-- Status Sinkronisasi Data Panel -->
+                <div class="sync-status-panel" style="display: flex; align-items: center; justify-content: space-between; background-color: #f8fafc; border: 1px solid var(--color-border); border-radius: var(--radius-md); padding: 12px 20px; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;">
+                    <div style="display: flex; align-items: center; gap: 8px;">
+                        <span style="font-size: 0.82rem; font-weight: 700; color: var(--color-primary); text-transform: uppercase; letter-spacing: 0.5px;">Monitoring Sinkronisasi Data:</span>
+                    </div>
+                    <div style="display: flex; gap: 18px; flex-wrap: wrap;">
+                        <span class="sync-item" id="sync-db" style="font-size: 0.82rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 4px;">✅ Database Peserta</span>
+                        <span class="sync-item" id="sync-presensi" style="font-size: 0.82rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 4px;">✅ Presensi</span>
+                        <span class="sync-item" id="sync-laporan" style="font-size: 0.82rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 4px;">✅ Laporan Pelatihan</span>
+                        <span class="sync-item" id="sync-statistik" style="font-size: 0.82rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 4px;">✅ Statistik</span>
+                        <span class="sync-item" id="sync-portal" style="font-size: 0.82rem; font-weight: 600; color: #10b981; display: flex; align-items: center; gap: 4px;">✅ Portal Peserta</span>
+                    </div>
+                </div>
+
                 <!-- Sub Navigation Tabs -->
                 <div class="dashboard-tabs-nav" style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--color-border); padding-bottom: 10px; width: 100%; flex-wrap: wrap;">
                     <button class="db-tab-btn active" id="btn-tab-laporan" onclick="switchDashboardTab('laporan', this)">
@@ -1230,6 +1244,11 @@
                             <div class="stat-body">
                                 <span class="stat-num" id="stat-total-peserta">0</span>
                                 <span class="stat-title">Total Peserta Terdaftar</span>
+                                <div style="font-size: 0.72rem; color: var(--color-text-muted); margin-top: 4px; display: flex; gap: 6px;">
+                                    <span style="color: #10b981; font-weight: 600;" id="stat-active-peserta">0 Aktif</span>
+                                    <span>|</span>
+                                    <span style="color: #ef4444; font-weight: 600;" id="stat-inactive-peserta">0 Nonaktif</span>
+                                </div>
                             </div>
                             <div class="stat-icon-wrapper" style="background-color: rgba(37, 99, 235, 0.1); color: var(--color-primary);"><i data-lucide="users"></i></div>
                         </div>
@@ -1525,6 +1544,7 @@
                     <div class="mgmt-stats-bar">
                         <span id="mgmt-stat-total">Total: <b>0</b> peserta</span>
                         <span id="mgmt-stat-aktif">Aktif: <b>0</b></span>
+                        <span id="mgmt-stat-nonaktif">Nonaktif: <b>0</b></span>
                         <span id="mgmt-stat-filtered">Ditampilkan: <b>0</b></span>
                     </div>
 
@@ -1672,6 +1692,7 @@
                             <div class="searchable-dropdown" id="rep-nama-dropdown-wrapper">
                                 <input type="text" id="rep-nama-search" required placeholder="Ketik nama Anda untuk mencari..." autocomplete="off" class="dropdown-search-input" onfocus="showRepDropdownList()" oninput="filterRepDropdownList()">
                                 <input type="hidden" id="rep-nama" required>
+                                <input type="hidden" id="rep-participant-id">
                                 <div class="dropdown-list-container hidden" id="rep-nama-list">
                                     <!-- Dynamically filled by JS -->
                                 </div>
