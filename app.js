@@ -1917,44 +1917,85 @@ async function verifyAdminLogin() {
         return;
     }
     
-    try {
-        const res = await fetch('/api/presence', {
-            headers: {
-                'x-admin-email': email,
-                'x-admin-pin': pin
+    if (isServerMode) {
+        try {
+            const res = await fetch('/api/presence', {
+                headers: {
+                    'x-admin-email': email,
+                    'x-admin-pin': pin
+                }
+            });
+            
+            if (res.ok) {
+                sessionStorage.setItem('admin_email', email);
+                sessionStorage.setItem('admin_pin', pin);
+                
+                // Log to server
+                await fetch('/api/logs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
+                    },
+                    body: JSON.stringify({ action: "Admin Login berhasil." })
+                });
+                
+                const loginBox = document.getElementById('dashboard-login-box');
+                const mainContent = document.getElementById('dashboard-main-content');
+                if (loginBox) loginBox.classList.add('hidden');
+                if (mainContent) mainContent.classList.remove('hidden');
+                
+                await fetchAdminData();
+                startAdminPolling();
+                
+                showToast('Buka Dashboard Berhasil!', 'unlock');
+            } else {
+                showToast('PIN yang Anda masukkan salah!', 'x');
             }
-        });
-        
-        if (res.ok) {
+        } catch (e) {
+            console.error("Error verifying admin login:", e);
+            showToast('Gagal terhubung ke server.', 'x');
+        }
+    } else {
+        // Standalone Client Mode (e.g. GitHub Pages)
+        const expectedPin = getPanitiaPin();
+        if (pin === expectedPin) {
             sessionStorage.setItem('admin_email', email);
             sessionStorage.setItem('admin_pin', pin);
             
-            // Log to server
-            await fetch('/api/logs', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'x-admin-email': email,
-                    'x-admin-pin': pin
-                },
-                body: JSON.stringify({ action: "Admin Login berhasil." })
+            // Log local activity
+            const logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
+            const jktTime = new Date();
+            logs.push({
+                id: Date.now() + Math.random(),
+                action: "Admin Login berhasil (Mode Standalone).",
+                timestamp: Date.now(),
+                date: jktTime.toISOString().split('T')[0],
+                time: jktTime.toTimeString().split(' ')[0]
             });
+            localStorage.setItem('admin_logs', JSON.stringify(logs));
+            adminLogs = logs;
             
             const loginBox = document.getElementById('dashboard-login-box');
             const mainContent = document.getElementById('dashboard-main-content');
             if (loginBox) loginBox.classList.add('hidden');
             if (mainContent) mainContent.classList.remove('hidden');
             
-            await fetchAdminData();
-            startAdminPolling();
+            // Render offline dashboard data
+            renderPresenceTable();
+            renderDashboardTable();
+            filterAndRenderParticipantTable();
+            populateSchoolFilterDropdown();
+            renderAdminLogsTable();
+            renderReportHistory();
+            renderTestimonials();
+            updateDashboardStats();
             
             showToast('Buka Dashboard Berhasil!', 'unlock');
         } else {
             showToast('PIN yang Anda masukkan salah!', 'x');
         }
-    } catch (e) {
-        console.error("Error verifying admin login:", e);
-        showToast('Gagal terhubung ke server.', 'x');
     }
 }
 
@@ -1982,62 +2023,85 @@ async function fetchAdminData() {
     const pin = sessionStorage.getItem('admin_pin');
     if (!email || !pin) return;
     
-    const headers = {
-        'x-admin-email': email,
-        'x-admin-pin': pin
-    };
-    
-    try {
-        // Fetch full presence list
-        const resPresence = await fetch('/api/presence', { headers });
-        if (resPresence.ok) {
-            presenceDb = await resPresence.json();
-            renderPresenceTable();
-            updatePresencePublicStats();
-        }
+    if (isServerMode) {
+        const headers = {
+            'x-admin-email': email,
+            'x-admin-pin': pin
+        };
         
-        // Fetch full participants list
-        const resParticipants = await fetch('/api/participants', { headers });
-        if (resParticipants.ok) {
-            const serverParticipants = await resParticipants.json();
-            participantState.participants = serverParticipants.map(sp => {
-                const existing = participantState.participants.find(p => p.id === sp.id);
-                return {
-                    ...sp,
-                    reportStatus: existing ? existing.reportStatus : (sp.reportStatus || 'Belum Dibuat')
-                };
-            });
-            participantState.totalRegistered = participantState.participants.length;
-            renderDashboardTable();
-            filterAndRenderParticipantTable();
-            populateSchoolFilterDropdown();
+        try {
+            // Fetch full presence list
+            const resPresence = await fetch('/api/presence', { headers });
+            if (resPresence.ok) {
+                presenceDb = await resPresence.json();
+                renderPresenceTable();
+                updatePresencePublicStats();
+            }
+            
+            // Fetch full participants list
+            const resParticipants = await fetch('/api/participants', { headers });
+            if (resParticipants.ok) {
+                const serverParticipants = await resParticipants.json();
+                participantState.participants = serverParticipants.map(sp => {
+                    const existing = participantState.participants.find(p => p.id === sp.id);
+                    return {
+                        ...sp,
+                        reportStatus: existing ? existing.reportStatus : (sp.reportStatus || 'Belum Dibuat')
+                    };
+                });
+                participantState.totalRegistered = participantState.participants.length;
+                renderDashboardTable();
+                filterAndRenderParticipantTable();
+                populateSchoolFilterDropdown();
+            }
+            
+            // Fetch logs
+            const resLogs = await fetch('/api/logs', { headers });
+            if (resLogs.ok) {
+                adminLogs = await resLogs.json();
+                renderAdminLogsTable();
+            }
+            
+            // Fetch reports
+            const resReports = await fetch('/api/reports', { headers });
+            if (resReports.ok) {
+                reportsDb = await resReports.json();
+                renderReportHistory();
+            }
+            
+            // Fetch testimonials
+            const resTestimonials = await fetch('/api/testimonials');
+            if (resTestimonials.ok) {
+                testimonialsDb = await resTestimonials.json();
+                renderTestimonials();
+            }
+            
+            // Update stats
+            await updateDashboardStats();
+        } catch (e) {
+            console.error("Error polling admin data:", e);
         }
+    } else {
+        // Offline / Standalone mode: read from localStorage and render
+        loadLocalStoragePresence();
         
-        // Fetch logs
-        const resLogs = await fetch('/api/logs', { headers });
-        if (resLogs.ok) {
-            adminLogs = await resLogs.json();
-            renderAdminLogsTable();
-        }
+        // Reports
+        const savedReports = localStorage.getItem('reports_db');
+        if (savedReports) reportsDb = JSON.parse(savedReports);
         
-        // Fetch reports
-        const resReports = await fetch('/api/reports', { headers });
-        if (resReports.ok) {
-            reportsDb = await resReports.json();
-            renderReportHistory();
-        }
+        // Testimonials
+        const savedTestimonials = localStorage.getItem('testimonials_db');
+        if (savedTestimonials) testimonialsDb = JSON.parse(savedTestimonials);
         
-        // Fetch testimonials
-        const resTestimonials = await fetch('/api/testimonials');
-        if (resTestimonials.ok) {
-            testimonialsDb = await resTestimonials.json();
-            renderTestimonials();
-        }
-        
-        // Update stats
-        await updateDashboardStats();
-    } catch (e) {
-        console.error("Error polling admin data:", e);
+        // Render all
+        renderPresenceTable();
+        renderDashboardTable();
+        filterAndRenderParticipantTable();
+        populateSchoolFilterDropdown();
+        renderAdminLogsTable();
+        renderReportHistory();
+        renderTestimonials();
+        updateDashboardStats();
     }
 }
 
