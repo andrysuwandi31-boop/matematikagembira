@@ -217,10 +217,15 @@ document.addEventListener('DOMContentLoaded', () => {
         }, 500);
     }
 
-    // Auto-login admin if session persists
-    const savedAdminEmail = sessionStorage.getItem('admin_email');
-    const savedAdminPin = sessionStorage.getItem('admin_pin');
+    // Auto-login admin if session persists (check sessionStorage first, fallback to localStorage)
+    const savedAdminEmail = sessionStorage.getItem('admin_email') || localStorage.getItem('admin_email');
+    const savedAdminPin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin');
     if (savedAdminEmail && savedAdminPin) {
+        sessionStorage.setItem('admin_email', savedAdminEmail);
+        sessionStorage.setItem('admin_pin', savedAdminPin);
+        localStorage.setItem('admin_email', savedAdminEmail);
+        localStorage.setItem('admin_pin', savedAdminPin);
+
         const loginBox = document.getElementById('dashboard-login-box');
         const mainContent = document.getElementById('dashboard-main-content');
         if (loginBox) loginBox.classList.add('hidden');
@@ -228,6 +233,16 @@ document.addEventListener('DOMContentLoaded', () => {
         fetchAdminData();
         startAdminPolling();
     }
+
+    // Start public synchronization polling (every 5 seconds) for mobile and public pages
+    startPublicSync();
+    
+    // Visibilitychange listener to force-refetch latest data when tab is re-activated or phone unlocked
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            initParticipantManagement();
+        }
+    });
 });
 
 // ==========================================================================
@@ -362,6 +377,10 @@ function switchPortalTab(tabName, btnElement) {
     const targetPane = document.getElementById(`portal-${tabName}`);
     if (targetPane) {
         targetPane.classList.add('active');
+    }
+    if (tabName === 'presensi') {
+        // Force refetch latest participants data immediately when opening presence page
+        initParticipantManagement();
     }
     lucide.createIcons();
 }
@@ -1946,16 +1965,21 @@ async function verifyAdminLogin() {
     
     if (isServerMode) {
         try {
-            const res = await fetch('/api/presence', {
+            const res = await fetch(`/api/presence?_=${Date.now()}`, {
+                cache: 'no-store',
                 headers: {
                     'x-admin-email': email,
-                    'x-admin-pin': pin
+                    'x-admin-pin': pin,
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
                 }
             });
             
             if (res.ok) {
                 sessionStorage.setItem('admin_email', email);
                 sessionStorage.setItem('admin_pin', pin);
+                localStorage.setItem('admin_email', email);
+                localStorage.setItem('admin_pin', pin);
                 
                 // Log to server
                 await fetch('/api/logs', {
@@ -1990,6 +2014,8 @@ async function verifyAdminLogin() {
         if (pin === expectedPin) {
             sessionStorage.setItem('admin_email', email);
             sessionStorage.setItem('admin_pin', pin);
+            localStorage.setItem('admin_email', email);
+            localStorage.setItem('admin_pin', pin);
             
             // Log local activity
             const logs = JSON.parse(localStorage.getItem('admin_logs') || '[]');
@@ -2053,12 +2079,23 @@ async function fetchAdminData() {
     if (isServerMode) {
         const headers = {
             'x-admin-email': email,
-            'x-admin-pin': pin
+            'x-admin-pin': pin,
+            'Cache-Control': 'no-cache',
+            'Pragma': 'no-cache'
         };
         
         try {
+            if (connectionState === 'terputus') {
+                updateConnectionStatus('menyambung');
+            }
+
             // Fetch full presence list
-            const resPresence = await fetch('/api/presence', { headers });
+            const resPresence = await fetch(`/api/presence?_=${Date.now()}`, { headers, cache: 'no-store' });
+            if (resPresence.status === 403) {
+                logError('Error Login', 'PIN Admin tidak valid saat restorasi sesi.');
+                lockDashboard();
+                return;
+            }
             if (resPresence.ok) {
                 presenceDb = await resPresence.json();
                 renderPresenceTable();
@@ -2066,7 +2103,11 @@ async function fetchAdminData() {
             }
             
             // Fetch full participants list
-            const resParticipants = await fetch('/api/participants', { headers });
+            const resParticipants = await fetch(`/api/participants?_=${Date.now()}`, { headers, cache: 'no-store' });
+            if (resParticipants.status === 403) {
+                lockDashboard();
+                return;
+            }
             if (resParticipants.ok) {
                 const serverParticipants = await resParticipants.json();
                 participantState.participants = serverParticipants.map(sp => {
@@ -2083,21 +2124,29 @@ async function fetchAdminData() {
             }
             
             // Fetch logs
-            const resLogs = await fetch('/api/logs', { headers });
+            const resLogs = await fetch(`/api/logs?_=${Date.now()}`, { headers, cache: 'no-store' });
+            if (resLogs.status === 403) {
+                lockDashboard();
+                return;
+            }
             if (resLogs.ok) {
                 adminLogs = await resLogs.json();
                 renderAdminLogsTable();
             }
             
             // Fetch reports
-            const resReports = await fetch('/api/reports', { headers });
+            const resReports = await fetch(`/api/reports?_=${Date.now()}`, { headers, cache: 'no-store' });
+            if (resReports.status === 403) {
+                lockDashboard();
+                return;
+            }
             if (resReports.ok) {
                 reportsDb = await resReports.json();
                 renderReportHistory();
             }
             
             // Fetch testimonials
-            const resTestimonials = await fetch('/api/testimonials');
+            const resTestimonials = await fetch(`/api/testimonials?_=${Date.now()}`, { cache: 'no-store' });
             if (resTestimonials.ok) {
                 testimonialsDb = await resTestimonials.json();
                 renderTestimonials();
@@ -2105,8 +2154,11 @@ async function fetchAdminData() {
             
             // Update stats
             await updateDashboardStats();
+            updateConnectionStatus('aktif');
         } catch (e) {
             console.error("Error polling admin data:", e);
+            updateConnectionStatus('terputus');
+            logError('Error Refresh', 'Gagal memperbarui data admin.', { error: e.message });
         }
     } else {
         // Offline / Standalone mode: read from localStorage and render
@@ -2170,6 +2222,8 @@ async function lockDashboard() {
     
     sessionStorage.removeItem('admin_email');
     sessionStorage.removeItem('admin_pin');
+    localStorage.removeItem('admin_email');
+    localStorage.removeItem('admin_pin');
     stopAdminPolling();
     
     const mainContent = document.getElementById('dashboard-main-content');
@@ -4873,7 +4927,13 @@ let importPreviewData = [];
 async function initParticipantManagement() {
     if (isServerMode) {
         try {
-            const res = await fetch('/api/participants/public');
+            const res = await fetch(`/api/participants/public?_=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
             if (res.ok) {
                 const serverParticipants = await res.json();
                 // Merge: preserve reportStatus from hardcoded data into server data
@@ -4888,6 +4948,7 @@ async function initParticipantManagement() {
             }
         } catch (e) {
             console.error('Gagal load participants dari server, pakai data hardcoded:', e);
+            logError('Error Sinkronisasi', 'Gagal memuat database peserta dari server.', { error: e.message });
         }
     } else {
         // Standalone: try localStorage participants
@@ -5766,4 +5827,134 @@ function exportParticipantsPDF() {
 
     doc.save('Data_Peserta_Matematika_Gembira.pdf');
     showToast('Data peserta berhasil diekspor ke PDF!', 'file-down');
+}
+
+// ==========================================================================
+// REAL-TIME PUBLIC SYNC, ERROR LOGGING & CONNECTION STATUS INDICATORS
+// ==========================================================================
+
+let connectionState = 'aktif';
+
+function updateConnectionStatus(state) {
+    if (connectionState === state) return;
+    connectionState = state;
+    setConnectionStatus(state);
+}
+
+function setConnectionStatus(status) {
+    const indicator = document.getElementById('connection-status-indicator');
+    if (!indicator) return;
+    
+    if (status === 'aktif') {
+        indicator.innerHTML = '🟢 Sinkronisasi Aktif';
+        indicator.style.color = '#10b981';
+    } else if (status === 'menyambung') {
+        indicator.innerHTML = '🟡 Menyambung Ulang';
+        indicator.style.color = '#f59e0b';
+    } else if (status === 'terputus') {
+        indicator.innerHTML = '🔴 Sinkronisasi Terputus';
+        indicator.style.color = '#ef4444';
+    }
+}
+
+async function logError(type, message, details = {}) {
+    const errorLog = {
+        id: Date.now() + Math.random(),
+        type: type, // 'Error Refresh', 'Error Login', 'Error Sinkronisasi', etc.
+        message: message,
+        details: details,
+        device: navigator.userAgent,
+        timestamp: Date.now(),
+        date: new Date().toISOString().split('T')[0],
+        time: new Date().toTimeString().split(' ')[0]
+    };
+    
+    try {
+        const localLogs = JSON.parse(localStorage.getItem('client_error_logs') || '[]');
+        localLogs.push(errorLog);
+        if (localLogs.length > 100) localLogs.shift();
+        localStorage.setItem('client_error_logs', JSON.stringify(localLogs));
+    } catch(e) {}
+    
+    if (isServerMode) {
+        try {
+            const email = sessionStorage.getItem('admin_email') || localStorage.getItem('admin_email');
+            const pin = sessionStorage.getItem('admin_pin') || localStorage.getItem('admin_pin');
+            await fetch('/api/logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-email': email || '',
+                    'x-admin-pin': pin || ''
+                },
+                body: JSON.stringify({
+                    action: `[ERROR] [${type}] ${message} (Device: ${navigator.userAgent.substring(0, 50)})`
+                })
+            });
+        } catch(e) {}
+    }
+}
+
+let publicSyncInterval = null;
+
+function startPublicSync() {
+    if (publicSyncInterval) clearInterval(publicSyncInterval);
+    publicSyncInterval = setInterval(async () => {
+        await syncPublicData();
+    }, 5000);
+}
+
+async function syncPublicData() {
+    if (isServerMode) {
+        try {
+            const res = await fetch(`/api/participants/public?_=${Date.now()}`, {
+                cache: 'no-store',
+                headers: {
+                    'Cache-Control': 'no-cache',
+                    'Pragma': 'no-cache'
+                }
+            });
+            if (res.ok) {
+                const serverParticipants = await res.json();
+                
+                let changed = false;
+                if (serverParticipants.length !== participantState.participants.length) {
+                    changed = true;
+                } else {
+                    for (let i = 0; i < serverParticipants.length; i++) {
+                        const sp = serverParticipants[i];
+                        const lp = participantState.participants.find(p => p.id === sp.id);
+                        if (!lp || lp.name !== sp.name || lp.school !== sp.school || lp.district !== sp.district || lp.reportStatus !== sp.reportStatus) {
+                            changed = true;
+                            break;
+                        }
+                    }
+                }
+                
+                if (changed) {
+                    participantState.participants = serverParticipants.map(sp => {
+                        const existing = participantState.participants.find(p => p.id === sp.id);
+                        return {
+                            ...sp,
+                            reportStatus: existing ? existing.reportStatus : (sp.reportStatus || 'Belum Dibuat')
+                        };
+                    });
+                    participantState.totalRegistered = participantState.participants.length;
+                    
+                    renderSearchableDropdown();
+                    renderRepSearchableDropdown();
+                    renderPublicDirectoryTable();
+                    
+                    const mainContent = document.getElementById('dashboard-main-content');
+                    if (mainContent && !mainContent.classList.contains('hidden')) {
+                        renderDashboardTable();
+                        filterAndRenderParticipantTable();
+                    }
+                }
+            }
+        } catch (e) {
+            console.error("Error syncing public data:", e);
+            logError('Error Sinkronisasi', 'Gagal sinkronisasi otomatis latar belakang.', { error: e.message });
+        }
+    }
 }

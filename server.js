@@ -304,6 +304,14 @@ const server = http.createServer((req, res) => {
     res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', 'Content-Type, X-Debug-Date, x-debug-date, x-admin-email, x-admin-pin, X-Admin-Email, X-Admin-Pin');
 
+    // Disable caching for all API responses
+    if (req.url.startsWith('/api/')) {
+        res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+        res.setHeader('Pragma', 'no-cache');
+        res.setHeader('Expires', '0');
+        res.setHeader('Surrogate-Control', 'no-store');
+    }
+
     // 2. Preflight handling
     if (req.method === 'OPTIONS') {
         res.writeHead(204);
