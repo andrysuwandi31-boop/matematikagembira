@@ -2284,7 +2284,7 @@ a.karya-card:hover {
 /* Stats Cards */
 .stats-row {
     display: grid;
-    grid-template-columns: repeat(4, 1fr);
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
     gap: 20px;
     margin-bottom: 30px;
 }
@@ -5183,4 +5183,474 @@ a.karya-card:hover {
 }
 
 
+/* ==========================================================================
+   MANAJEMEN PESERTA MODULE STYLES (NEW)
+   ========================================================================== */
 
+/* --- Toolbar --- */
+.mgmt-toolbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+    padding: 14px 18px;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+}
+
+.mgmt-toolbar-left,
+.mgmt-toolbar-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+.mgmt-btn-primary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: var(--radius-sm);
+}
+
+.mgmt-btn-import {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-size: 0.88rem;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: var(--radius-sm);
+    cursor: pointer;
+    background: linear-gradient(135deg, #10b981, #059669);
+    color: white;
+    border: none;
+    transition: all 0.2s;
+}
+
+.mgmt-btn-import:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.mgmt-btn-template {
+    font-size: 0.82rem;
+}
+
+/* --- Stats Bar --- */
+.mgmt-stats-bar {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+    padding: 10px 16px;
+    background: linear-gradient(135deg, rgba(37, 99, 235, 0.06), rgba(16, 185, 129, 0.06));
+    border: 1px solid rgba(37, 99, 235, 0.15);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    color: var(--color-text-muted);
+}
+
+.mgmt-stats-bar b {
+    color: var(--color-text-main);
+    font-size: 1rem;
+}
+
+/* --- Filter Bar --- */
+.mgmt-filter-bar {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    flex-wrap: wrap;
+    margin-bottom: 16px;
+}
+
+.mgmt-search-wrapper {
+    position: relative;
+    flex: 1;
+    min-width: 220px;
+}
+
+.mgmt-search-wrapper i {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 16px;
+    height: 16px;
+    stroke: var(--color-text-muted);
+}
+
+.mgmt-search-wrapper input {
+    width: 100%;
+    padding: 9px 12px 9px 38px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: var(--font-body);
+    background: var(--color-bg-white);
+    color: var(--color-text-main);
+    transition: border-color 0.2s;
+    box-sizing: border-box;
+}
+
+.mgmt-search-wrapper input:focus {
+    outline: none;
+    border-color: var(--color-primary);
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+}
+
+.mgmt-filter-bar select {
+    padding: 9px 32px 9px 12px;
+    border: 1.5px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+    font-family: var(--font-body);
+    background: var(--color-bg-white);
+    color: var(--color-text-main);
+    cursor: pointer;
+    transition: border-color 0.2s;
+    -webkit-appearance: none;
+    appearance: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 8px center;
+}
+
+.mgmt-filter-bar select:focus {
+    outline: none;
+    border-color: var(--color-primary);
+}
+
+/* --- Table --- */
+.mgmt-table-wrapper {
+    overflow-x: auto;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    background: var(--color-bg-white);
+}
+
+.mgmt-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    font-family: var(--font-body);
+    min-width: 900px;
+}
+
+.mgmt-table thead {
+    background: linear-gradient(135deg, #0f172a, #1e293b);
+    color: white;
+}
+
+.mgmt-table thead th {
+    padding: 12px 14px;
+    text-align: left;
+    font-weight: 600;
+    font-size: 0.8rem;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+}
+
+.mgmt-table tbody tr {
+    border-bottom: 1px solid var(--color-border);
+    transition: background-color 0.15s;
+}
+
+.mgmt-table tbody tr:hover {
+    background-color: rgba(37, 99, 235, 0.04);
+}
+
+.mgmt-table tbody tr:last-child {
+    border-bottom: none;
+}
+
+.mgmt-table tbody td {
+    padding: 11px 14px;
+    color: var(--color-text-main);
+    vertical-align: middle;
+}
+
+.mgmt-nip-cell {
+    font-family: 'Courier New', monospace;
+    font-size: 0.78rem;
+    color: var(--color-text-muted) !important;
+    white-space: nowrap;
+}
+
+.mgmt-date-cell {
+    font-size: 0.78rem;
+    color: var(--color-text-muted) !important;
+    white-space: nowrap;
+}
+
+.mgmt-empty-cell {
+    color: var(--color-text-muted);
+    font-style: italic;
+}
+
+/* --- Status Badges --- */
+.mgmt-status-badge {
+    display: inline-flex;
+    align-items: center;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+}
+
+.mgmt-badge-aktif {
+    background: rgba(16, 185, 129, 0.12);
+    color: #065f46;
+    border: 1px solid rgba(16, 185, 129, 0.3);
+}
+
+.mgmt-badge-nonaktif {
+    background: rgba(239, 68, 68, 0.1);
+    color: #991b1b;
+    border: 1px solid rgba(239, 68, 68, 0.25);
+}
+
+/* --- Action Buttons --- */
+.mgmt-action-cell {
+    white-space: nowrap;
+    display: flex;
+    gap: 6px;
+    align-items: center;
+}
+
+.mgmt-btn-edit,
+.mgmt-btn-delete {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 30px;
+    height: 30px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mgmt-btn-edit {
+    background: rgba(37, 99, 235, 0.1);
+    color: var(--color-primary);
+}
+
+.mgmt-btn-edit:hover {
+    background: var(--color-primary);
+    color: white;
+    transform: translateY(-1px);
+}
+
+.mgmt-btn-delete {
+    background: rgba(239, 68, 68, 0.1);
+    color: #dc2626;
+}
+
+.mgmt-btn-delete:hover {
+    background: #dc2626;
+    color: white;
+    transform: translateY(-1px);
+}
+
+/* --- Empty State --- */
+.mgmt-empty-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 60px 20px;
+    color: var(--color-text-muted);
+    gap: 12px;
+}
+
+.mgmt-empty-state i {
+    width: 48px;
+    height: 48px;
+    stroke: var(--color-text-muted);
+    opacity: 0.4;
+}
+
+.mgmt-empty-state p {
+    font-size: 0.9rem;
+    text-align: center;
+}
+
+/* --- Pagination --- */
+.mgmt-pagination {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 18px;
+    flex-wrap: wrap;
+}
+
+.mgmt-page-btn {
+    min-width: 36px;
+    height: 36px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1.5px solid var(--color-border);
+    background: var(--color-bg-white);
+    color: var(--color-text-main);
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+
+.mgmt-page-btn:hover:not(:disabled) {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.mgmt-page-btn.active {
+    background: var(--color-primary);
+    border-color: var(--color-primary);
+    color: white;
+    font-weight: 700;
+}
+
+.mgmt-page-btn:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.mgmt-page-dots {
+    color: var(--color-text-muted);
+    font-size: 0.9rem;
+    padding: 0 4px;
+}
+
+/* --- Modal Sizes: Medium, XLarge, Small --- */
+.modal-medium {
+    max-width: 700px;
+    width: 95%;
+}
+
+.modal-xlarge {
+    max-width: 1000px;
+    width: 96%;
+}
+
+.modal-small {
+    max-width: 440px;
+    width: 95%;
+}
+
+/* --- Participant Form Styles --- */
+.required-star {
+    color: #ef4444;
+    margin-left: 2px;
+}
+
+.form-actions-row {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 12px;
+    margin-top: 24px;
+    padding-top: 16px;
+    border-top: 1px solid var(--color-border);
+}
+
+/* --- Import Preview Modal Styles --- */
+.import-summary-bar {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    margin-bottom: 14px;
+    padding: 10px 16px;
+    background: var(--color-bg-light);
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+    font-size: 0.88rem;
+}
+
+.import-summary-bar b {
+    font-size: 1rem;
+    color: var(--color-text-main);
+}
+
+.import-guide-text {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.83rem;
+    color: var(--color-text-muted);
+    margin-bottom: 14px;
+    line-height: 1.5;
+}
+
+.import-guide-text i {
+    width: 15px;
+    height: 15px;
+    flex-shrink: 0;
+}
+
+.import-row-duplicate td {
+    opacity: 0.5;
+    text-decoration: line-through;
+    text-decoration-color: rgba(239, 68, 68, 0.5);
+}
+
+.import-row-duplicate .mgmt-status-badge {
+    text-decoration: none;
+}
+
+/* --- Danger Button --- */
+.btn-danger {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 9px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: #ef4444;
+    color: white;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.btn-danger:hover {
+    background: #dc2626;
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(239, 68, 68, 0.35);
+}
+
+/* --- btn-secondary (reuse for Import label) --- */
+.btn-secondary {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 18px;
+    border: none;
+    border-radius: var(--radius-sm);
+    background: linear-gradient(135deg, var(--color-secondary), var(--color-secondary-hover));
+    color: white;
+    font-size: 0.88rem;
+    font-weight: 700;
+    cursor: pointer;
+    transition: all 0.2s;
+    font-family: var(--font-body);
+}
+
+.btn-secondary:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}

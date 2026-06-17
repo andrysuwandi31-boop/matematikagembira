@@ -203,6 +203,31 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Load reports and testimonials
     initReportsAndTestimonials();
+
+    // Load participants from server and sync all features
+    initParticipantManagement();
+
+    // Check for access=denied redirect
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('access') === 'denied') {
+        const cleanUrl = window.location.protocol + "//" + window.location.host + window.location.pathname;
+        window.history.replaceState({ path: cleanUrl }, '', cleanUrl);
+        setTimeout(() => {
+            showToast("Akses ditolak. Anda tidak memiliki hak sebagai Administrator.", "x");
+        }, 500);
+    }
+
+    // Auto-login admin if session persists
+    const savedAdminEmail = sessionStorage.getItem('admin_email');
+    const savedAdminPin = sessionStorage.getItem('admin_pin');
+    if (savedAdminEmail && savedAdminPin) {
+        const loginBox = document.getElementById('dashboard-login-box');
+        const mainContent = document.getElementById('dashboard-main-content');
+        if (loginBox) loginBox.classList.add('hidden');
+        if (mainContent) mainContent.classList.remove('hidden');
+        fetchAdminData();
+        startAdminPolling();
+    }
 });
 
 // ==========================================================================
@@ -1211,6 +1236,19 @@ async function saveReportData(report) {
     } else {
         reportsDb.push(report);
     }
+
+    // Save report ID locally to track user's reports
+    let myReportIds = [];
+    const savedIds = localStorage.getItem('my_report_ids');
+    if (savedIds) {
+        try {
+            myReportIds = JSON.parse(savedIds);
+        } catch(e) {}
+    }
+    if (!myReportIds.includes(report.id)) {
+        myReportIds.push(report.id);
+        localStorage.setItem('my_report_ids', JSON.stringify(myReportIds));
+    }
     
     if (isServerMode) {
         try {
@@ -1380,11 +1418,30 @@ function loadLocalStorageReportsAndTestimonials() {
 async function initReportsAndTestimonials() {
     if (isServerMode) {
         try {
-            const resReports = await fetch('/api/reports');
-            reportsDb = await resReports.json();
-            
+            // Load testimonials from server (publicly visible)
             const resTestimonials = await fetch('/api/testimonials');
             testimonialsDb = await resTestimonials.json();
+            
+            // For reports, since GET /api/reports is admin-only,
+            // we load the user's reports based on local IDs.
+            const savedMyReportIds = localStorage.getItem('my_report_ids');
+            let ids = [];
+            if (savedMyReportIds) {
+                try {
+                    ids = JSON.parse(savedMyReportIds);
+                } catch(e) {}
+            }
+            
+            const resReports = await fetch('/api/reports/my-reports', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ ids })
+            });
+            if (resReports.ok) {
+                reportsDb = await resReports.json();
+            } else {
+                reportsDb = [];
+            }
         } catch (e) {
             console.error("Error loading server reports/testimonials:", e);
             loadLocalStorageReportsAndTestimonials();
@@ -1837,30 +1894,203 @@ function getPanitiaPin() {
     return savedPin;
 }
 
-function verifyPin() {
-    const pin = document.getElementById('panitia-pin').value;
-    const correctPin = getPanitiaPin();
-    if (pin === correctPin) {
-        document.getElementById('dashboard-login-box').classList.add('hidden');
-        document.getElementById('dashboard-main-content').classList.remove('hidden');
+// Global variable for polling interval
+let adminPollingInterval = null;
+const SUPER_ADMIN_EMAIL = 'admin@matematikagembira.com';
+
+async function verifyAdminLogin() {
+    const emailInput = document.getElementById('panitia-email');
+    const pinInput = document.getElementById('panitia-pin');
+    
+    if (!emailInput || !pinInput) return;
+    
+    const email = emailInput.value.trim();
+    const pin = pinInput.value.trim();
+    
+    if (!email || !pin) {
+        showToast('Email dan PIN wajib diisi!', 'x');
+        return;
+    }
+    
+    if (email.toLowerCase() !== SUPER_ADMIN_EMAIL) {
+        showToast('Akses ditolak. Anda tidak memiliki hak sebagai Administrator.', 'x');
+        return;
+    }
+    
+    try {
+        const res = await fetch('/api/presence', {
+            headers: {
+                'x-admin-email': email,
+                'x-admin-pin': pin
+            }
+        });
         
-        // Render Dashboard Stats and Charts
-        updateDashboardStats();
-        initDashboardCharts();
-        renderDashboardTable();
-        
-        showToast('Buka Dashboard Berhasil!', 'unlock');
-    } else {
-        showToast('PIN yang Anda masukkan salah!', 'x');
+        if (res.ok) {
+            sessionStorage.setItem('admin_email', email);
+            sessionStorage.setItem('admin_pin', pin);
+            
+            // Log to server
+            await fetch('/api/logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-email': email,
+                    'x-admin-pin': pin
+                },
+                body: JSON.stringify({ action: "Admin Login berhasil." })
+            });
+            
+            const loginBox = document.getElementById('dashboard-login-box');
+            const mainContent = document.getElementById('dashboard-main-content');
+            if (loginBox) loginBox.classList.add('hidden');
+            if (mainContent) mainContent.classList.remove('hidden');
+            
+            await fetchAdminData();
+            startAdminPolling();
+            
+            showToast('Buka Dashboard Berhasil!', 'unlock');
+        } else {
+            showToast('PIN yang Anda masukkan salah!', 'x');
+        }
+    } catch (e) {
+        console.error("Error verifying admin login:", e);
+        showToast('Gagal terhubung ke server.', 'x');
     }
 }
 
-function lockDashboard() {
-    document.getElementById('dashboard-main-content').classList.add('hidden');
-    document.getElementById('dashboard-login-box').classList.remove('hidden');
-    document.getElementById('panitia-pin').value = '';
+function verifyPin() {
+    // Wrapper for backward compatibility if called elsewhere
+    verifyAdminLogin();
+}
+
+function startAdminPolling() {
+    if (adminPollingInterval) clearInterval(adminPollingInterval);
+    adminPollingInterval = setInterval(async () => {
+        await fetchAdminData();
+    }, 3000);
+}
+
+function stopAdminPolling() {
+    if (adminPollingInterval) {
+        clearInterval(adminPollingInterval);
+        adminPollingInterval = null;
+    }
+}
+
+async function fetchAdminData() {
+    const email = sessionStorage.getItem('admin_email');
+    const pin = sessionStorage.getItem('admin_pin');
+    if (!email || !pin) return;
     
-    // Destroy charts to allow clean re-initialization
+    const headers = {
+        'x-admin-email': email,
+        'x-admin-pin': pin
+    };
+    
+    try {
+        // Fetch full presence list
+        const resPresence = await fetch('/api/presence', { headers });
+        if (resPresence.ok) {
+            presenceDb = await resPresence.json();
+            renderPresenceTable();
+            updatePresencePublicStats();
+        }
+        
+        // Fetch full participants list
+        const resParticipants = await fetch('/api/participants', { headers });
+        if (resParticipants.ok) {
+            const serverParticipants = await resParticipants.json();
+            participantState.participants = serverParticipants.map(sp => {
+                const existing = participantState.participants.find(p => p.id === sp.id);
+                return {
+                    ...sp,
+                    reportStatus: existing ? existing.reportStatus : (sp.reportStatus || 'Belum Dibuat')
+                };
+            });
+            participantState.totalRegistered = participantState.participants.length;
+            renderDashboardTable();
+            filterAndRenderParticipantTable();
+            populateSchoolFilterDropdown();
+        }
+        
+        // Fetch logs
+        const resLogs = await fetch('/api/logs', { headers });
+        if (resLogs.ok) {
+            adminLogs = await resLogs.json();
+            renderAdminLogsTable();
+        }
+        
+        // Fetch reports
+        const resReports = await fetch('/api/reports', { headers });
+        if (resReports.ok) {
+            reportsDb = await resReports.json();
+            renderReportHistory();
+        }
+        
+        // Fetch testimonials
+        const resTestimonials = await fetch('/api/testimonials');
+        if (resTestimonials.ok) {
+            testimonialsDb = await resTestimonials.json();
+            renderTestimonials();
+        }
+        
+        // Update stats
+        await updateDashboardStats();
+    } catch (e) {
+        console.error("Error polling admin data:", e);
+    }
+}
+
+function populateSchoolFilterDropdown() {
+    const select = document.getElementById('f-sekolah');
+    if (!select) return;
+    
+    const currentVal = select.value;
+    select.innerHTML = '<option value="">Semua Sekolah</option>';
+    
+    const schools = [...new Set(participantState.participants.map(p => p.school))].sort();
+    schools.forEach(school => {
+        const opt = document.createElement('option');
+        opt.value = school;
+        opt.innerText = school;
+        select.appendChild(opt);
+    });
+    
+    select.value = currentVal;
+}
+
+async function lockDashboard() {
+    const email = sessionStorage.getItem('admin_email');
+    const pin = sessionStorage.getItem('admin_pin');
+    
+    if (email && pin) {
+        try {
+            await fetch('/api/logs', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-email': email,
+                    'x-admin-pin': pin
+                },
+                body: JSON.stringify({ action: "Admin Logout." })
+            });
+        } catch (e) {}
+    }
+    
+    sessionStorage.removeItem('admin_email');
+    sessionStorage.removeItem('admin_pin');
+    stopAdminPolling();
+    
+    const mainContent = document.getElementById('dashboard-main-content');
+    const loginBox = document.getElementById('dashboard-login-box');
+    if (mainContent) mainContent.classList.add('hidden');
+    if (loginBox) loginBox.classList.remove('hidden');
+    
+    const pinInput = document.getElementById('panitia-pin');
+    if (pinInput) pinInput.value = '';
+    const emailInput = document.getElementById('panitia-email');
+    if (emailInput) emailInput.value = '';
+    
     if (kehadiranChartObj) kehadiranChartObj.destroy();
     if (evaluasiChartObj) evaluasiChartObj.destroy();
     
@@ -1872,7 +2102,6 @@ function openSettingsModal() {
     document.getElementById('settings-new-pin').value = '';
     document.getElementById('settings-confirm-pin').value = '';
     
-    // Load saved Gemini API key
     const savedKey = localStorage.getItem('gemini_api_key') || '';
     document.getElementById('settings-gemini-key').value = savedKey;
     
@@ -1884,7 +2113,7 @@ function closeSettingsModal() {
     document.getElementById('settings-modal').classList.remove('active');
 }
 
-function saveNewPin() {
+async function saveNewPin() {
     const currentPinInput = document.getElementById('settings-current-pin').value.trim();
     const newPinInput = document.getElementById('settings-new-pin').value.trim();
     const confirmPinInput = document.getElementById('settings-confirm-pin').value.trim();
@@ -1892,7 +2121,6 @@ function saveNewPin() {
     
     let pinChanged = false;
     
-    // If user filled any PIN field, run verification and update it
     if (currentPinInput || newPinInput || confirmPinInput) {
         const correctPin = getPanitiaPin();
         
@@ -1911,11 +2139,40 @@ function saveNewPin() {
             return;
         }
         
-        localStorage.setItem('panitia_pin', newPinInput);
-        pinChanged = true;
+        if (isServerMode) {
+            try {
+                const email = sessionStorage.getItem('admin_email');
+                const pin = sessionStorage.getItem('admin_pin');
+                const response = await fetch('/api/config/update', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
+                    },
+                    body: JSON.stringify({ newPin: newPinInput })
+                });
+                
+                if (response.ok) {
+                    sessionStorage.setItem('admin_pin', newPinInput);
+                    localStorage.setItem('panitia_pin', newPinInput);
+                    pinChanged = true;
+                } else {
+                    const errData = await response.json();
+                    showToast(errData.error || 'Gagal memperbarui PIN di server.', 'x');
+                    return;
+                }
+            } catch (e) {
+                console.error("Error updating server PIN:", e);
+                showToast('Gagal terhubung ke server.', 'x');
+                return;
+            }
+        } else {
+            localStorage.setItem('panitia_pin', newPinInput);
+            pinChanged = true;
+        }
     }
     
-    // Save Gemini API key
     localStorage.setItem('gemini_api_key', geminiKeyInput);
     
     if (pinChanged) {
@@ -1926,19 +2183,56 @@ function saveNewPin() {
     closeSettingsModal();
 }
 
-function updateDashboardStats() {
+async function updateDashboardStats() {
     const s = participantState;
+    const totalParticipants = s.participants.length;
     
-    // Safety check if DOM elements exist
     const totalEl = document.getElementById('stat-total-peserta');
-    const attEl = document.getElementById('stat-kehadiran');
-    const scoreEl = document.getElementById('stat-skor-eval');
+    const hadirEl = document.getElementById('stat-hadir');
+    const izinEl = document.getElementById('stat-izin');
+    const sakitEl = document.getElementById('stat-sakit');
+    const belumEl = document.getElementById('stat-belum');
     const reportsEl = document.getElementById('stat-laporan');
+    const testimonialsEl = document.getElementById('stat-testimoni');
     
-    if (totalEl) totalEl.innerText = s.totalRegistered;
-    if (attEl) attEl.innerText = `${s.attendanceRate}%`;
-    if (scoreEl) scoreEl.innerText = `${s.avgEvaluation} / 5`;
-    if (reportsEl) reportsEl.innerText = s.reportsGenerated;
+    const hadirTitle = document.getElementById('stat-hadir-title');
+    const izinTitle = document.getElementById('stat-izin-title');
+    const sakitTitle = document.getElementById('stat-sakit-title');
+    const belumTitle = document.getElementById('stat-belum-title');
+
+    let dateStr = '2026-06-17';
+    try {
+        const serverTime = await getServerTime();
+        const jc = getJakartaDateComponents(serverTime);
+        dateStr = jc.dateString;
+    } catch(e) {}
+
+    let activeDayLabel = 'Hari 1';
+    let filterDayStr = 'Hari 1 : Rabu, 17 Juni 2026';
+    if (dateStr === '2026-06-18') {
+        activeDayLabel = 'Hari 2';
+        filterDayStr = 'Hari 2 : Kamis, 18 Juni 2026';
+    }
+
+    const activeDayRecords = presenceDb.filter(p => p.day === filterDayStr);
+    const countHadir = activeDayRecords.filter(p => p.status === 'Hadir').length;
+    const countIzin = activeDayRecords.filter(p => p.status === 'Izin').length;
+    const countSakit = activeDayRecords.filter(p => p.status === 'Sakit').length;
+    const countTotal = activeDayRecords.length;
+    const countBelum = Math.max(0, totalParticipants - countTotal);
+
+    if (totalEl) totalEl.innerText = totalParticipants;
+    if (hadirEl) hadirEl.innerText = countHadir;
+    if (izinEl) izinEl.innerText = countIzin;
+    if (sakitEl) sakitEl.innerText = countSakit;
+    if (belumEl) belumEl.innerText = countBelum;
+    if (reportsEl) reportsEl.innerText = reportsDb.length;
+    if (testimonialsEl) testimonialsEl.innerText = testimonialsDb.length;
+
+    if (hadirTitle) hadirTitle.innerText = `Total Hadir (${activeDayLabel})`;
+    if (izinTitle) izinTitle.innerText = `Total Izin (${activeDayLabel})`;
+    if (sakitTitle) sakitTitle.innerText = `Total Sakit (${activeDayLabel})`;
+    if (belumTitle) belumTitle.innerText = `Belum Presensi (${activeDayLabel})`;
 }
 
 // Initialize Charts inside Dashboard
@@ -2608,13 +2902,12 @@ async function initPresenceSystem() {
 
     if (isServerMode) {
         try {
-            // Load presence data from server
-            const resPresence = await fetch('/api/presence');
+            // Load presence data from server (public status check only)
+            const resPresence = await fetch('/api/presence/public');
             presenceDb = await resPresence.json();
             
-            // Load logs from server
-            const resLogs = await fetch('/api/logs');
-            adminLogs = await resLogs.json();
+            // Logs are only loaded after admin login
+            adminLogs = [];
         } catch (e) {
             console.error("Error loading server data, falling back to LocalStorage:", e);
             loadLocalStoragePresence();
@@ -3277,6 +3570,7 @@ function renderPresenceTable() {
     const filterHari = document.getElementById('f-hari').value;
     const filterStatus = document.getElementById('f-status').value;
     const filterKecamatan = document.getElementById('f-kecamatan').value;
+    const filterSekolah = document.getElementById('f-sekolah')?.value || '';
     
     // Filter records
     let filteredRecords = presenceDb.filter(p => {
@@ -3289,8 +3583,9 @@ function renderPresenceTable() {
         const matchesHari = filterHari === '' || p.day === filterHari;
         const matchesStatus = filterStatus === '' || p.status === filterStatus;
         const matchesKecamatan = filterKecamatan === '' || p.district === filterKecamatan;
+        const matchesSekolah = filterSekolah === '' || p.school === filterSekolah;
         
-        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan;
+        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan && matchesSekolah;
     });
     
     // Sort records
@@ -3481,9 +3776,15 @@ async function handlePresenceEditSubmit(event) {
     
     if (isServerMode) {
         try {
+            const adminEmail = sessionStorage.getItem('admin_email');
+            const adminPin = sessionStorage.getItem('admin_pin');
             const response = await fetch(`/api/presence/${id}`, {
                 method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-email': adminEmail,
+                    'x-admin-pin': adminPin
+                },
                 body: JSON.stringify({ email, phone, day, status })
             });
             
@@ -3534,8 +3835,14 @@ async function deletePresence(id) {
     if (confirm(`Apakah Anda yakin ingin menghapus data presensi untuk ${record.name}? Tindakan ini tidak dapat dibatalkan.`)) {
         if (isServerMode) {
             try {
+                const adminEmail = sessionStorage.getItem('admin_email');
+                const adminPin = sessionStorage.getItem('admin_pin');
                 const response = await fetch(`/api/presence/${id}`, {
-                    method: 'DELETE'
+                    method: 'DELETE',
+                    headers: {
+                        'x-admin-email': adminEmail,
+                        'x-admin-pin': adminPin
+                    }
                 });
                 
                 if (!response.ok) {
@@ -3724,6 +4031,7 @@ function exportPresenceCSV() {
     const filterHari = document.getElementById('f-hari').value;
     const filterStatus = document.getElementById('f-status').value;
     const filterKecamatan = document.getElementById('f-kecamatan').value;
+    const filterSekolah = document.getElementById('f-sekolah')?.value || '';
     const searchVal = document.getElementById('p-search').value.toLowerCase();
     
     let filteredRecords = presenceDb.filter(p => {
@@ -3736,8 +4044,9 @@ function exportPresenceCSV() {
         const matchesHari = filterHari === '' || p.day === filterHari;
         const matchesStatus = filterStatus === '' || p.status === filterStatus;
         const matchesKecamatan = filterKecamatan === '' || p.district === filterKecamatan;
+        const matchesSekolah = filterSekolah === '' || p.school === filterSekolah;
         
-        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan;
+        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan && matchesSekolah;
     });
     
     if (filteredRecords.length === 0) {
@@ -3780,6 +4089,7 @@ function exportPresenceExcel() {
     const filterHari = document.getElementById('f-hari').value;
     const filterStatus = document.getElementById('f-status').value;
     const filterKecamatan = document.getElementById('f-kecamatan').value;
+    const filterSekolah = document.getElementById('f-sekolah')?.value || '';
     const searchVal = document.getElementById('p-search').value.toLowerCase();
     
     let filteredRecords = presenceDb.filter(p => {
@@ -3792,8 +4102,9 @@ function exportPresenceExcel() {
         const matchesHari = filterHari === '' || p.day === filterHari;
         const matchesStatus = filterStatus === '' || p.status === filterStatus;
         const matchesKecamatan = filterKecamatan === '' || p.district === filterKecamatan;
+        const matchesSekolah = filterSekolah === '' || p.school === filterSekolah;
         
-        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan;
+        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan && matchesSekolah;
     });
     
     if (filteredRecords.length === 0) {
@@ -3838,6 +4149,7 @@ function exportPresencePDF() {
     const filterHari = document.getElementById('f-hari').value;
     const filterStatus = document.getElementById('f-status').value;
     const filterKecamatan = document.getElementById('f-kecamatan').value;
+    const filterSekolah = document.getElementById('f-sekolah')?.value || '';
     const searchVal = document.getElementById('p-search').value.toLowerCase();
     
     let filteredRecords = presenceDb.filter(p => {
@@ -3850,8 +4162,9 @@ function exportPresencePDF() {
         const matchesHari = filterHari === '' || p.day === filterHari;
         const matchesStatus = filterStatus === '' || p.status === filterStatus;
         const matchesKecamatan = filterKecamatan === '' || p.district === filterKecamatan;
+        const matchesSekolah = filterSekolah === '' || p.school === filterSekolah;
         
-        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan;
+        return matchesSearch && matchesHari && matchesStatus && matchesKecamatan && matchesSekolah;
     });
     
     if (filteredRecords.length === 0) {
@@ -4029,21 +4342,14 @@ function exportPresencePDF() {
     
     doc.setFont('Helvetica', 'normal');
     doc.setFontSize(8.5);
-    doc.text("Mengetahui,", 30, startY + 25);
-    doc.text("Sekretaris Panitia,", 145, startY + 25);
+    doc.text("Mengetahui,", 130, startY + 25);
     
     doc.setFont('Helvetica', 'bold');
-    doc.text("Ketua Panitia Pelaksana Matematika Gembira,", 30, startY + 30);
-    doc.text("Ikatan Guru Indonesia (IGI) Kota Singkawang,", 145, startY + 30);
+    doc.text("Ketua Panitia Pelaksana Matematika Gembira,", 130, startY + 30);
     
-    // Blank spaces for physical signatures
+    // Blank space for physical signature
     doc.setFont('Helvetica', 'bold');
-    doc.text("TOKIMIN, M.Pd.", 30, startY + 58);
-    doc.text("AMALIA KIFTIAH, S.Pd.", 145, startY + 58);
-    
-    doc.setFont('Helvetica', 'normal');
-    doc.text("NIP. 19700312 199302 1 002", 30, startY + 62);
-    doc.text("NIP. 19890520 201402 2 003", 145, startY + 62);
+    doc.text("TOKIMIN, M.Pd.I", 130, startY + 58);
     
     // Add page numbers on all footer instances
     for (let i = 1; i <= pageNum; i++) {
@@ -4058,7 +4364,7 @@ function exportPresencePDF() {
 }
 
 // 12. Security Audit Logs
-function writeAdminLog(action) {
+async function writeAdminLog(action) {
     const now = new Date();
     const timestampStr = now.toLocaleDateString('id-ID') + " " + now.toLocaleTimeString('id-ID');
     
@@ -4068,33 +4374,60 @@ function writeAdminLog(action) {
         action: action
     };
     
-    adminLogs.unshift(logEntry); // Prepend to show newest first
-    // Cap logs at 100 entries to optimize local storage size
-    if (adminLogs.length > 100) adminLogs.pop();
-    
-    localStorage.setItem('admin_logs', JSON.stringify(adminLogs));
+    if (isServerMode) {
+        const email = sessionStorage.getItem('admin_email');
+        const pin = sessionStorage.getItem('admin_pin');
+        if (email && pin) {
+            try {
+                await fetch('/api/logs', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
+                    },
+                    body: JSON.stringify({ action })
+                });
+            } catch (e) {
+                console.error("Gagal menulis log ke server:", e);
+            }
+        }
+    } else {
+        adminLogs.unshift(logEntry); // Prepend to show newest first
+        if (adminLogs.length > 100) adminLogs.pop();
+        localStorage.setItem('admin_logs', JSON.stringify(adminLogs));
+    }
 }
 
-function openAdminLogsModal() {
+function renderAdminLogsTable() {
     const tbody = document.getElementById('admin-logs-table-body');
     if (!tbody) return;
     
     tbody.innerHTML = '';
     
-    if (adminLogs.length === 0) {
+    // Sort logs descending (latest first) so it is easy to read
+    const sortedLogs = [...adminLogs].sort((a, b) => b.timestamp - a.timestamp);
+    
+    if (sortedLogs.length === 0) {
         tbody.innerHTML = `<tr><td colspan="3" style="text-align:center; color:var(--color-text-muted);">Belum ada log aktivitas admin tercatat.</td></tr>`;
     } else {
-        adminLogs.forEach((log, index) => {
+        sortedLogs.forEach((log, index) => {
             const tr = document.createElement('tr');
+            // If server mode, log objects have log.date and log.time.
+            // If standalone mode, log objects have log.time containing date & time.
+            const timeStr = log.date ? `${log.date} ${log.time}` : log.time;
             tr.innerHTML = `
                 <td>${index + 1}</td>
-                <td><span style="font-family:monospace; font-size:0.8rem;">${log.time}</span></td>
+                <td><span style="font-family:monospace; font-size:0.8rem;">${timeStr}</span></td>
                 <td>${log.action}</td>
             `;
             tbody.appendChild(tr);
         });
     }
-    
+}
+
+function openAdminLogsModal() {
+    renderAdminLogsTable();
     document.getElementById('admin-logs-modal').classList.add('active');
     lucide.createIcons();
 }
@@ -4107,7 +4440,15 @@ async function clearAdminLogs() {
     if (confirm("Apakah Anda yakin ingin menghapus seluruh riwayat log aktivitas admin?")) {
         if (isServerMode) {
             try {
-                const response = await fetch('/api/logs/clear', { method: 'POST' });
+                const email = sessionStorage.getItem('admin_email');
+                const pin = sessionStorage.getItem('admin_pin');
+                const response = await fetch('/api/logs/clear', {
+                    method: 'POST',
+                    headers: {
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
+                    }
+                });
                 if (!response.ok) {
                     showToast('Gagal membersihkan log server.', 'x');
                     return;
@@ -4123,7 +4464,7 @@ async function clearAdminLogs() {
             localStorage.setItem('admin_logs', JSON.stringify(adminLogs));
         }
         
-        openAdminLogsModal();
+        renderAdminLogsTable();
         showToast('Log aktivitas admin berhasil dibersihkan.', 'trash-2');
     }
 }
@@ -4221,10 +4562,14 @@ async function executeDataReset() {
         
         if (isServerMode) {
             try {
+                const email = sessionStorage.getItem('admin_email');
+                const pin = sessionStorage.getItem('admin_pin');
                 const response = await fetch('/api/reports/reset', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
                     },
                     body: JSON.stringify({ mode: 'user', name: lastUserName, adminName })
                 });
@@ -4296,10 +4641,14 @@ async function executeDataReset() {
         
         if (isServerMode) {
             try {
+                const email = sessionStorage.getItem('admin_email');
+                const pin = sessionStorage.getItem('admin_pin');
                 const response = await fetch('/api/reports/reset', {
                     method: 'POST',
                     headers: {
-                        'Content-Type': 'application/json'
+                        'Content-Type': 'application/json',
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
                     },
                     body: JSON.stringify({ mode: 'all', adminName })
                 });
@@ -4381,3 +4730,686 @@ function localResetAll() {
     return deletedCount;
 }
 
+
+// =============================================================================
+// MODUL MANAJEMEN PESERTA (NEW MODULE)
+// =============================================================================
+
+// Pagination state for participant table
+let mgmtCurrentPage = 1;
+const MGMT_PAGE_SIZE = 15;
+let mgmtFilteredParticipants = [];
+let participantToDeleteId = null;
+let importPreviewData = [];
+
+// -----------------------------------------------
+// INIT: Load participants from server (or localStorage fallback)
+// -----------------------------------------------
+async function initParticipantManagement() {
+    if (isServerMode) {
+        try {
+            const res = await fetch('/api/participants/public');
+            if (res.ok) {
+                const serverParticipants = await res.json();
+                // Merge: preserve reportStatus from hardcoded data into server data
+                participantState.participants = serverParticipants.map(sp => {
+                    const existing = participantState.participants.find(p => p.id === sp.id);
+                    return {
+                        ...sp,
+                        reportStatus: existing ? existing.reportStatus : (sp.reportStatus || 'Belum Dibuat')
+                    };
+                });
+                participantState.totalRegistered = participantState.participants.length;
+            }
+        } catch (e) {
+            console.error('Gagal load participants dari server, pakai data hardcoded:', e);
+        }
+    } else {
+        // Standalone: try localStorage participants
+        const saved = localStorage.getItem('participants_db');
+        if (saved) {
+            try {
+                const localParticipants = JSON.parse(saved);
+                if (localParticipants.length > 0) {
+                    participantState.participants = localParticipants;
+                    participantState.totalRegistered = localParticipants.length;
+                }
+            } catch (e) {}
+        }
+    }
+
+    // Re-render all dependent features with updated data
+    refreshAllParticipantDependents();
+}
+
+// Save to localStorage as fallback
+function saveParticipantsToLocalStorage() {
+    localStorage.setItem('participants_db', JSON.stringify(participantState.participants));
+}
+
+// Refresh all features that depend on participants list
+function refreshAllParticipantDependents() {
+    participantState.totalRegistered = participantState.participants.length;
+    updateDashboardStats();
+    renderDashboardTable();
+    renderSearchableDropdown();
+    renderRepSearchableDropdown();
+    renderPublicDirectoryTable();
+    filterAndRenderParticipantTable();
+    lucide.createIcons();
+}
+
+// -----------------------------------------------
+// TAB SWITCH: Load participants when switching to "peserta" tab
+// -----------------------------------------------
+const _origSwitchDashboardTab = typeof switchDashboardTab === 'function' ? switchDashboardTab : null;
+function switchDashboardTab(tabName, btnElement) {
+    const buttons = document.querySelectorAll('.db-tab-btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    if (btnElement) btnElement.classList.add('active');
+
+    const panes = document.querySelectorAll('.dashboard-pane');
+    panes.forEach(pane => pane.classList.add('hidden'));
+
+    const targetPane = document.getElementById(`db-pane-${tabName}`);
+    if (targetPane) targetPane.classList.remove('hidden');
+
+    if (tabName === 'peserta') {
+        filterAndRenderParticipantTable();
+        lucide.createIcons();
+    }
+
+    lucide.createIcons();
+}
+
+// -----------------------------------------------
+// RENDER: Participant table with pagination
+// -----------------------------------------------
+function filterAndRenderParticipantTable() {
+    const searchVal = (document.getElementById('mgmt-search')?.value || '').toLowerCase();
+    const districtVal = document.getElementById('mgmt-filter-district')?.value || '';
+    const statusVal = document.getElementById('mgmt-filter-status')?.value || '';
+
+    mgmtFilteredParticipants = participantState.participants.filter(p => {
+        const matchSearch = !searchVal ||
+            (p.name || '').toLowerCase().includes(searchVal) ||
+            (p.nip || '').toLowerCase().includes(searchVal) ||
+            (p.school || '').toLowerCase().includes(searchVal) ||
+            (p.email || '').toLowerCase().includes(searchVal) ||
+            (p.phone || '').toLowerCase().includes(searchVal);
+        const matchDistrict = !districtVal || p.district === districtVal;
+        const matchStatus = !statusVal || p.status === statusVal;
+        return matchSearch && matchDistrict && matchStatus;
+    });
+
+    // Update stats bar
+    const totalEl = document.getElementById('mgmt-stat-total');
+    const aktifEl = document.getElementById('mgmt-stat-aktif');
+    const filteredEl = document.getElementById('mgmt-stat-filtered');
+    if (totalEl) totalEl.innerHTML = `Total: <b>${participantState.participants.length}</b> peserta`;
+    if (aktifEl) aktifEl.innerHTML = `Aktif: <b>${participantState.participants.filter(p => p.status === 'Aktif').length}</b>`;
+    if (filteredEl) filteredEl.innerHTML = `Ditampilkan: <b>${mgmtFilteredParticipants.length}</b>`;
+
+    mgmtCurrentPage = 1;
+    renderMgmtTablePage();
+}
+
+function renderMgmtTablePage() {
+    const tbody = document.getElementById('mgmt-table-body');
+    const emptyState = document.getElementById('mgmt-empty-state');
+    if (!tbody) return;
+
+    tbody.innerHTML = '';
+
+    if (mgmtFilteredParticipants.length === 0) {
+        if (emptyState) emptyState.classList.remove('hidden');
+        renderMgmtPagination(0);
+        return;
+    }
+
+    if (emptyState) emptyState.classList.add('hidden');
+
+    const totalPages = Math.ceil(mgmtFilteredParticipants.length / MGMT_PAGE_SIZE);
+    const start = (mgmtCurrentPage - 1) * MGMT_PAGE_SIZE;
+    const end = Math.min(start + MGMT_PAGE_SIZE, mgmtFilteredParticipants.length);
+    const pageItems = mgmtFilteredParticipants.slice(start, end);
+
+    pageItems.forEach((p, idx) => {
+        const globalIdx = start + idx + 1;
+        const statusClass = p.status === 'Aktif' ? 'mgmt-badge-aktif' : 'mgmt-badge-nonaktif';
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td>${globalIdx}</td>
+            <td><b>${p.name || ''}</b></td>
+            <td class="mgmt-nip-cell">${p.nip || '<span class="mgmt-empty-cell">-</span>'}</td>
+            <td>${p.school || ''}</td>
+            <td>${p.district || ''}</td>
+            <td>${p.phone || '<span class="mgmt-empty-cell">-</span>'}</td>
+            <td>${p.email || '<span class="mgmt-empty-cell">-</span>'}</td>
+            <td><span class="mgmt-status-badge ${statusClass}">${p.status || 'Aktif'}</span></td>
+            <td class="mgmt-date-cell">${p.dateAdded || '-'}</td>
+            <td class="mgmt-action-cell">
+                <button onclick="openEditParticipantModal(${p.id})" class="mgmt-btn-edit" title="Edit">
+                    <i data-lucide="pencil" style="width:14px;height:14px;"></i>
+                </button>
+                <button onclick="openConfirmDeleteModal(${p.id}, '${(p.name || '').replace(/'/g, "\\'")}')" class="mgmt-btn-delete" title="Hapus">
+                    <i data-lucide="trash-2" style="width:14px;height:14px;"></i>
+                </button>
+            </td>
+        `;
+        tbody.appendChild(tr);
+    });
+
+    renderMgmtPagination(totalPages);
+    lucide.createIcons();
+}
+
+function renderMgmtPagination(totalPages) {
+    const container = document.getElementById('mgmt-pagination');
+    if (!container) return;
+    container.innerHTML = '';
+
+    if (totalPages <= 1) return;
+
+    const makeBtn = (label, page, isActive = false, isDisabled = false) => {
+        const btn = document.createElement('button');
+        btn.textContent = label;
+        btn.className = 'mgmt-page-btn' + (isActive ? ' active' : '');
+        btn.disabled = isDisabled;
+        if (!isDisabled) btn.onclick = () => { mgmtCurrentPage = page; renderMgmtTablePage(); };
+        return btn;
+    };
+
+    container.appendChild(makeBtn('‹', mgmtCurrentPage - 1, false, mgmtCurrentPage === 1));
+
+    for (let i = 1; i <= totalPages; i++) {
+        if (totalPages <= 7 || i === 1 || i === totalPages || Math.abs(i - mgmtCurrentPage) <= 1) {
+            container.appendChild(makeBtn(i, i, i === mgmtCurrentPage));
+        } else if (Math.abs(i - mgmtCurrentPage) === 2) {
+            const dots = document.createElement('span');
+            dots.textContent = '…';
+            dots.className = 'mgmt-page-dots';
+            container.appendChild(dots);
+        }
+    }
+
+    container.appendChild(makeBtn('›', mgmtCurrentPage + 1, false, mgmtCurrentPage === totalPages));
+}
+
+// -----------------------------------------------
+// MODAL: Add Participant
+// -----------------------------------------------
+function openAddParticipantModal() {
+    document.getElementById('participant-form-modal-title').textContent = 'Tambah Peserta Baru';
+    document.getElementById('pf-id').value = '';
+    document.getElementById('pf-name').value = '';
+    document.getElementById('pf-nip').value = '';
+    document.getElementById('pf-school').value = '';
+    document.getElementById('pf-district').value = '';
+    document.getElementById('pf-phone').value = '';
+    document.getElementById('pf-email').value = '';
+    document.getElementById('pf-status').value = 'Aktif';
+    document.getElementById('pf-submit-btn').innerHTML = '<i data-lucide="save"></i> Simpan Peserta';
+    document.getElementById('participant-form-modal').classList.add('active');
+    lucide.createIcons();
+}
+
+function openEditParticipantModal(id) {
+    const p = participantState.participants.find(p => p.id === id);
+    if (!p) return;
+
+    document.getElementById('participant-form-modal-title').textContent = 'Edit Data Peserta';
+    document.getElementById('pf-id').value = p.id;
+    document.getElementById('pf-name').value = p.name || '';
+    document.getElementById('pf-nip').value = p.nip || '';
+    document.getElementById('pf-school').value = p.school || '';
+    document.getElementById('pf-district').value = p.district || '';
+    document.getElementById('pf-phone').value = p.phone || '';
+    document.getElementById('pf-email').value = p.email || '';
+    document.getElementById('pf-status').value = p.status || 'Aktif';
+    document.getElementById('pf-submit-btn').innerHTML = '<i data-lucide="check"></i> Perbarui Data';
+    document.getElementById('participant-form-modal').classList.add('active');
+    lucide.createIcons();
+}
+
+function closeParticipantFormModal() {
+    document.getElementById('participant-form-modal').classList.remove('active');
+}
+
+// -----------------------------------------------
+// SAVE: Add or Edit Participant
+// -----------------------------------------------
+async function saveParticipant(event) {
+    event.preventDefault();
+
+    const id = document.getElementById('pf-id').value;
+    const payload = {
+        name: document.getElementById('pf-name').value.trim(),
+        nip: document.getElementById('pf-nip').value.trim(),
+        school: document.getElementById('pf-school').value.trim(),
+        district: document.getElementById('pf-district').value,
+        phone: document.getElementById('pf-phone').value.trim(),
+        email: document.getElementById('pf-email').value.trim(),
+        status: document.getElementById('pf-status').value
+    };
+
+    if (!payload.name || !payload.school || !payload.district) {
+        showToast('Nama, Sekolah, dan Kecamatan wajib diisi!', 'alert-circle');
+        return;
+    }
+
+    const isEdit = !!id;
+
+    if (isServerMode) {
+        try {
+            const method = isEdit ? 'PUT' : 'POST';
+            const url = isEdit ? `/api/participants/${id}` : '/api/participants';
+            const email = sessionStorage.getItem('admin_email');
+            const pin = sessionStorage.getItem('admin_pin');
+            const res = await fetch(url, {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-email': email,
+                    'x-admin-pin': pin
+                },
+                body: JSON.stringify(payload)
+            });
+
+            if (res.status === 409) {
+                showToast('Data peserta ini sudah ada (duplikat).', 'alert-circle');
+                return;
+            }
+            if (!res.ok) {
+                const err = await res.json();
+                showToast(err.error || 'Gagal menyimpan data.', 'alert-circle');
+                return;
+            }
+
+            const saved = await res.json();
+
+            if (isEdit) {
+                const idx = participantState.participants.findIndex(p => p.id === parseInt(id));
+                if (idx !== -1) participantState.participants[idx] = { ...participantState.participants[idx], ...saved };
+            } else {
+                participantState.participants.push(saved);
+            }
+        } catch (e) {
+            showToast('Koneksi server gagal, menyimpan ke lokal...', 'wifi-off');
+            localSaveParticipant(isEdit, id, payload);
+        }
+    } else {
+        localSaveParticipant(isEdit, id, payload);
+    }
+
+    closeParticipantFormModal();
+    refreshAllParticipantDependents();
+    showToast(isEdit ? 'Data peserta berhasil diperbarui!' : 'Peserta baru berhasil ditambahkan!', 'check-circle');
+}
+
+function localSaveParticipant(isEdit, id, payload) {
+    if (isEdit) {
+        const idx = participantState.participants.findIndex(p => p.id === parseInt(id));
+        if (idx !== -1) participantState.participants[idx] = { ...participantState.participants[idx], ...payload };
+    } else {
+        const maxId = participantState.participants.reduce((max, p) => Math.max(max, p.id || 0), 0);
+        participantState.participants.push({
+            id: maxId + 1,
+            dateAdded: new Date().toISOString().slice(0, 10),
+            reportStatus: 'Belum Dibuat',
+            ...payload
+        });
+    }
+    saveParticipantsToLocalStorage();
+}
+
+// -----------------------------------------------
+// DELETE: Participant
+// -----------------------------------------------
+function openConfirmDeleteModal(id, name) {
+    participantToDeleteId = id;
+    const nameEl = document.getElementById('confirm-delete-name');
+    if (nameEl) nameEl.textContent = name;
+    document.getElementById('confirm-delete-modal').classList.add('active');
+    lucide.createIcons();
+}
+
+function closeConfirmDeleteModal() {
+    participantToDeleteId = null;
+    document.getElementById('confirm-delete-modal').classList.remove('active');
+}
+
+async function confirmDeleteParticipant() {
+    if (!participantToDeleteId) return;
+    const id = participantToDeleteId;
+    closeConfirmDeleteModal();
+
+    if (isServerMode) {
+        try {
+            const email = sessionStorage.getItem('admin_email');
+            const pin = sessionStorage.getItem('admin_pin');
+            const res = await fetch(`/api/participants/${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'x-admin-email': email,
+                    'x-admin-pin': pin
+                }
+            });
+            if (!res.ok) {
+                showToast('Gagal menghapus peserta dari server.', 'alert-circle');
+                return;
+            }
+        } catch (e) {
+            showToast('Koneksi server gagal, menghapus dari lokal...', 'wifi-off');
+        }
+    }
+
+    participantState.participants = participantState.participants.filter(p => p.id !== id);
+    saveParticipantsToLocalStorage();
+    refreshAllParticipantDependents();
+    showToast('Peserta berhasil dihapus.', 'trash-2');
+}
+
+// -----------------------------------------------
+// IMPORT: Excel File
+// -----------------------------------------------
+function handleExcelImport(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = new Uint8Array(e.target.result);
+            const workbook = XLSX.read(data, { type: 'array' });
+            const sheet = workbook.Sheets[workbook.SheetNames[0]];
+            const rows = XLSX.utils.sheet_to_json(sheet, { defval: '' });
+
+            // Map column names (flexible mapping)
+            const colMap = {
+                name: ['Nama Lengkap', 'nama lengkap', 'nama', 'Nama'],
+                nip: ['NIP', 'nip', 'NUPTK'],
+                school: ['Asal Sekolah', 'asal sekolah', 'sekolah', 'Sekolah', 'Instansi'],
+                district: ['Kecamatan', 'kecamatan'],
+                phone: ['Nomor HP', 'nomor hp', 'No HP', 'hp', 'HP', 'Telepon'],
+                email: ['Email', 'email', 'E-mail']
+            };
+
+            const findVal = (row, keys) => {
+                for (const k of keys) {
+                    if (row[k] !== undefined && row[k] !== '') return String(row[k]).trim();
+                }
+                return '';
+            };
+
+            importPreviewData = rows.map(row => ({
+                name: findVal(row, colMap.name),
+                nip: findVal(row, colMap.nip),
+                school: findVal(row, colMap.school),
+                district: findVal(row, colMap.district),
+                phone: findVal(row, colMap.phone),
+                email: findVal(row, colMap.email)
+            })).filter(r => r.name || r.school);
+
+            // Check which ones are duplicates
+            const existingKeys = new Set(participantState.participants.map(p => `${p.name?.toLowerCase()}|${p.school?.toLowerCase()}`));
+            let validCount = 0;
+            let skipCount = 0;
+
+            const previewBody = document.getElementById('import-preview-body');
+            if (!previewBody) return;
+            previewBody.innerHTML = '';
+
+            importPreviewData.forEach((row, i) => {
+                const key = `${row.name?.toLowerCase()}|${row.school?.toLowerCase()}`;
+                const isDup = existingKeys.has(key) || !row.name || !row.school;
+                if (isDup) skipCount++;
+                else validCount++;
+
+                const tr = document.createElement('tr');
+                tr.className = isDup ? 'import-row-duplicate' : '';
+                tr.innerHTML = `
+                    <td>${i + 1}</td>
+                    <td>${row.name || '<i>kosong</i>'}</td>
+                    <td>${row.nip || '-'}</td>
+                    <td>${row.school || '<i>kosong</i>'}</td>
+                    <td>${row.district || '-'}</td>
+                    <td>${row.phone || '-'}</td>
+                    <td>${row.email || '-'}</td>
+                    <td><span class="mgmt-status-badge ${isDup ? 'mgmt-badge-nonaktif' : 'mgmt-badge-aktif'}">${isDup ? 'Lewati' : 'Import'}</span></td>
+                `;
+                previewBody.appendChild(tr);
+            });
+
+            document.getElementById('import-count-valid').innerHTML = `Data valid: <b>${validCount}</b>`;
+            document.getElementById('import-count-skip').innerHTML = `Duplikat/Kosong: <b>${skipCount}</b>`;
+
+            document.getElementById('import-preview-modal').classList.add('active');
+            lucide.createIcons();
+        } catch (err) {
+            showToast('Gagal membaca file Excel. Pastikan format benar.', 'alert-circle');
+            console.error('Excel parse error:', err);
+        }
+    };
+    reader.readAsArrayBuffer(file);
+
+    // Reset input so same file can be re-imported
+    event.target.value = '';
+}
+
+function closeImportPreviewModal() {
+    document.getElementById('import-preview-modal').classList.remove('active');
+    importPreviewData = [];
+}
+
+async function executeImport() {
+    if (!importPreviewData || importPreviewData.length === 0) {
+        showToast('Tidak ada data untuk diimpor.', 'alert-circle');
+        return;
+    }
+
+    const btn = document.getElementById('btn-execute-import');
+    if (btn) { btn.disabled = true; btn.textContent = 'Mengimpor...'; }
+
+    if (isServerMode) {
+        try {
+            const email = sessionStorage.getItem('admin_email');
+            const pin = sessionStorage.getItem('admin_pin');
+            const res = await fetch('/api/participants/import', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'x-admin-email': email,
+                    'x-admin-pin': pin
+                },
+                body: JSON.stringify({ rows: importPreviewData })
+            });
+
+            if (res.ok) {
+                const result = await res.json();
+                // Reload full participants list from server
+                const resAll = await fetch('/api/participants', {
+                    headers: {
+                        'x-admin-email': email,
+                        'x-admin-pin': pin
+                    }
+                });
+                if (resAll.ok) {
+                    const serverParticipants = await resAll.json();
+                    participantState.participants = serverParticipants.map(sp => {
+                        const existing = participantState.participants.find(p => p.id === sp.id);
+                        return { ...sp, reportStatus: existing ? existing.reportStatus : (sp.reportStatus || 'Belum Dibuat') };
+                    });
+                }
+                closeImportPreviewModal();
+                refreshAllParticipantDependents();
+                showToast(`Berhasil import ${result.successCount} peserta! (${result.skipCount} dilewati)`, 'check-circle');
+            } else {
+                const err = await res.json();
+                showToast(err.error || 'Import gagal.', 'alert-circle');
+            }
+        } catch (e) {
+            // Fallback to local import
+            localImportParticipants();
+        }
+    } else {
+        localImportParticipants();
+    }
+
+    if (btn) { btn.disabled = false; btn.innerHTML = '<i data-lucide="upload"></i> Import Sekarang'; lucide.createIcons(); }
+}
+
+function localImportParticipants() {
+    let successCount = 0;
+    let skipCount = 0;
+    const existingKeys = new Set(participantState.participants.map(p => `${(p.name || '').toLowerCase()}|${(p.school || '').toLowerCase()}`));
+    let maxId = participantState.participants.reduce((max, p) => Math.max(max, p.id || 0), 0);
+
+    importPreviewData.forEach(row => {
+        if (!row.name || !row.school) { skipCount++; return; }
+        const key = `${row.name.toLowerCase()}|${row.school.toLowerCase()}`;
+        if (existingKeys.has(key)) { skipCount++; return; }
+        maxId++;
+        participantState.participants.push({
+            id: maxId,
+            name: row.name.trim(),
+            nip: row.nip || '',
+            school: row.school.trim(),
+            district: row.district || '',
+            phone: row.phone || '',
+            email: row.email || '',
+            status: 'Aktif',
+            dateAdded: new Date().toISOString().slice(0, 10),
+            reportStatus: 'Belum Dibuat'
+        });
+        existingKeys.add(key);
+        successCount++;
+    });
+
+    saveParticipantsToLocalStorage();
+    closeImportPreviewModal();
+    refreshAllParticipantDependents();
+    showToast(`Berhasil import ${successCount} peserta! (${skipCount} dilewati)`, 'check-circle');
+}
+
+// -----------------------------------------------
+// EXPORT: Template Excel
+// -----------------------------------------------
+function downloadParticipantTemplate() {
+    const ws = XLSX.utils.aoa_to_sheet([
+        ['Nama Lengkap', 'NIP', 'Asal Sekolah', 'Kecamatan', 'Nomor HP', 'Email'],
+        ['Contoh: Sari Dewi, S.Pd.', '19860112 200910 1 002', 'SDN 1 SINGKAWANG', 'Singkawang Tengah', '081234567890', 'guru@email.com']
+    ]);
+    ws['!cols'] = [{ wch: 35 }, { wch: 25 }, { wch: 30 }, { wch: 22 }, { wch: 18 }, { wch: 28 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Template Peserta');
+    XLSX.writeFile(wb, 'Template_Import_Peserta_Matematika_Gembira.xlsx');
+    showToast('Template Excel berhasil didownload!', 'download');
+}
+
+// -----------------------------------------------
+// EXPORT: Excel
+// -----------------------------------------------
+function exportParticipantsExcel() {
+    const rows = [['No', 'Nama Lengkap', 'NIP', 'Asal Sekolah', 'Kecamatan', 'Nomor HP', 'Email', 'Status', 'Tanggal Input']];
+    mgmtFilteredParticipants.forEach((p, i) => {
+        rows.push([i + 1, p.name, p.nip || '-', p.school, p.district, p.phone || '-', p.email || '-', p.status || 'Aktif', p.dateAdded || '-']);
+    });
+    const ws = XLSX.utils.aoa_to_sheet(rows);
+    ws['!cols'] = [{ wch: 5 }, { wch: 35 }, { wch: 25 }, { wch: 30 }, { wch: 22 }, { wch: 18 }, { wch: 28 }, { wch: 12 }, { wch: 14 }];
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Data Peserta');
+    XLSX.writeFile(wb, 'Data_Peserta_Matematika_Gembira.xlsx');
+    showToast('Data peserta berhasil diekspor ke Excel!', 'table-2');
+}
+
+// -----------------------------------------------
+// EXPORT: CSV
+// -----------------------------------------------
+function exportParticipantsCSV() {
+    const header = ['No', 'Nama Lengkap', 'NIP', 'Asal Sekolah', 'Kecamatan', 'Nomor HP', 'Email', 'Status', 'Tanggal Input'];
+    const rows = mgmtFilteredParticipants.map((p, i) => [
+        i + 1, `"${p.name}"`, `"${p.nip || ''}"`, `"${p.school}"`, `"${p.district}"`,
+        `"${p.phone || ''}"`, `"${p.email || ''}"`, p.status || 'Aktif', p.dateAdded || ''
+    ]);
+    const csvContent = [header, ...rows].map(r => r.join(',')).join('\n');
+    const blob = new Blob(['\ufeff' + csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'Data_Peserta_Matematika_Gembira.csv';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    showToast('Data peserta berhasil diekspor ke CSV!', 'file-text');
+}
+
+// -----------------------------------------------
+// EXPORT: PDF
+// -----------------------------------------------
+function exportParticipantsPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(13);
+    doc.text('DAFTAR PESERTA PELATIHAN MATEMATIKA GEMBIRA', 148, 18, { align: 'center' });
+    doc.setFont('Helvetica', 'normal');
+    doc.setFontSize(10);
+    doc.text('Dinas Pendidikan dan Kebudayaan Kota Singkawang — IGI Kota Singkawang — 17-18 Juni 2026', 148, 25, { align: 'center' });
+
+    let y = 35;
+    const cols = [12, 8, 55, 35, 45, 30, 30, 40];
+    const headers = ['No', 'NIP', 'Nama Lengkap', 'Asal Sekolah', 'Kecamatan', 'Nomor HP', 'Status', 'Email'];
+    const lineH = 8;
+
+    // Header row
+    doc.setFillColor(15, 23, 42);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('Helvetica', 'bold');
+    doc.setFontSize(8.5);
+    let x = 10;
+    headers.forEach((h, i) => {
+        doc.rect(x, y, cols[i], lineH, 'F');
+        doc.text(h, x + 2, y + 5.5);
+        x += cols[i];
+    });
+
+    y += lineH;
+    doc.setFont('Helvetica', 'normal');
+    doc.setTextColor(0, 0, 0);
+    doc.setFontSize(7.5);
+
+    mgmtFilteredParticipants.forEach((p, i) => {
+        if (y > 185) {
+            doc.addPage();
+            y = 20;
+        }
+        const fill = i % 2 === 0 ? [248, 250, 252] : [255, 255, 255];
+        x = 10;
+        const values = [
+            i + 1, p.nip || '-',
+            p.name, p.school, p.district,
+            p.phone || '-', p.status || 'Aktif', p.email || '-'
+        ];
+        doc.setFillColor(...fill);
+        doc.rect(10, y, cols.reduce((a, b) => a + b, 0), lineH, 'F');
+        values.forEach((val, j) => {
+            const cell = doc.splitTextToSize(String(val), cols[j] - 3);
+            doc.text(cell[0], x + 2, y + 5.5);
+            x += cols[j];
+        });
+        doc.setDrawColor(220, 220, 220);
+        doc.line(10, y + lineH, 287, y + lineH);
+        y += lineH;
+    });
+
+    doc.setFont('Helvetica', 'italic');
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(`Total: ${mgmtFilteredParticipants.length} peserta — Dicetak: ${new Date().toLocaleDateString('id-ID')}`, 10, y + 8);
+
+    doc.save('Data_Peserta_Matematika_Gembira.pdf');
+    showToast('Data peserta berhasil diekspor ke PDF!', 'file-down');
+}

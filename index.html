@@ -19,11 +19,14 @@
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
     
+    <!-- SheetJS for Excel Import/Export -->
+    <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+    
     <!-- Lucide Icons -->
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <!-- Custom CSS -->
-    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="style.css?v=2.0">
 </head>
 <body>
 
@@ -1182,11 +1185,12 @@
                 <div class="auth-icon-box">
                     <i data-lucide="lock"></i>
                 </div>
-                <h3>Akses Terbatas Panitia</h3>
-                <p>Silakan masukkan PIN keamanan panitia untuk melihat statistik, rekap presensi, evaluasi peserta, serta unduhan laporan.</p>
-                <div class="pin-input-wrapper">
-                    <input type="password" id="panitia-pin" placeholder="Masukkan PIN Panitia" onkeydown="if(event.key==='Enter') verifyPin()">
-                    <button onclick="verifyPin()" class="btn btn-primary">Buka Dashboard</button>
+                <h3>Akses Terbatas Panitia/Admin</h3>
+                <p>Silakan masukkan Email Administrator dan PIN Keamanan untuk membuka dashboard admin.</p>
+                <div class="auth-form-wrapper" style="display: flex; flex-direction: column; gap: 12px; width: 100%; max-width: 320px; margin: 20px auto 0 auto;">
+                    <input type="email" id="panitia-email" placeholder="Email Administrator" class="form-control" style="width: 100%; text-align: center; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 0.95rem;">
+                    <input type="password" id="panitia-pin" placeholder="PIN Keamanan" class="form-control" style="width: 100%; text-align: center; padding: 12px; border-radius: var(--radius-sm); border: 1px solid var(--color-border); font-size: 0.95rem;" onkeydown="if(event.key==='Enter') verifyAdminLogin()">
+                    <button onclick="verifyAdminLogin()" class="btn btn-primary" style="width: 100%; padding: 12px;">Buka Dashboard</button>
                 </div>
             </div>
 
@@ -1205,12 +1209,15 @@
                 </div>
 
                 <!-- Sub Navigation Tabs -->
-                <div class="dashboard-tabs-nav" style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--color-border); padding-bottom: 10px; width: 100%;">
+                <div class="dashboard-tabs-nav" style="display: flex; gap: 15px; margin-bottom: 25px; border-bottom: 2px solid var(--color-border); padding-bottom: 10px; width: 100%; flex-wrap: wrap;">
                     <button class="db-tab-btn active" id="btn-tab-laporan" onclick="switchDashboardTab('laporan', this)">
                         <i data-lucide="file-spreadsheet"></i> Laporan &amp; Kartu Peserta
                     </button>
                     <button class="db-tab-btn" id="btn-tab-kehadiran" onclick="switchDashboardTab('kehadiran', this)">
                         <i data-lucide="user-check"></i> Rekap Kehadiran Peserta
+                    </button>
+                    <button class="db-tab-btn" id="btn-tab-peserta" onclick="switchDashboardTab('peserta', this)">
+                        <i data-lucide="users"></i> Manajemen Peserta
                     </button>
                 </div>
 
@@ -1218,37 +1225,61 @@
                 <div class="dashboard-pane" id="db-pane-laporan">
                     <!-- Stats Cards Row -->
                     <div class="stats-row">
-                        <!-- Card 1 -->
+                        <!-- Card 1: Total Peserta Terdaftar -->
                         <div class="stat-card">
                             <div class="stat-body">
-                                <span class="stat-num" id="stat-total-peserta">125</span>
-                                <span class="stat-title">Jumlah Peserta Terdaftar</span>
+                                <span class="stat-num" id="stat-total-peserta">0</span>
+                                <span class="stat-title">Total Peserta Terdaftar</span>
                             </div>
-                            <div class="stat-icon-wrapper"><i data-lucide="users"></i></div>
+                            <div class="stat-icon-wrapper" style="background-color: rgba(37, 99, 235, 0.1); color: var(--color-primary);"><i data-lucide="users"></i></div>
                         </div>
-                        <!-- Card 2 -->
+                        <!-- Card 2: Total Hadir -->
                         <div class="stat-card">
                             <div class="stat-body">
-                                <span class="stat-num" id="stat-kehadiran">96%</span>
-                                <span class="stat-title">Kehadiran Rata-rata</span>
+                                <span class="stat-num" id="stat-hadir" style="color: var(--color-success);">0</span>
+                                <span class="stat-title" id="stat-hadir-title">Total Hadir (Hari Pelatihan Aktif)</span>
                             </div>
-                            <div class="stat-icon-wrapper"><i data-lucide="calendar-check"></i></div>
+                            <div class="stat-icon-wrapper" style="background-color: rgba(16, 185, 129, 0.1); color: var(--color-success);"><i data-lucide="check-circle"></i></div>
                         </div>
-                        <!-- Card 3 -->
+                        <!-- Card 3: Total Izin -->
                         <div class="stat-card">
                             <div class="stat-body">
-                                <span class="stat-num" id="stat-skor-eval">4.8 / 5</span>
-                                <span class="stat-title">Rata-rata Skor Evaluasi</span>
+                                <span class="stat-num" id="stat-izin" style="color: var(--color-accent);">0</span>
+                                <span class="stat-title" id="stat-izin-title">Total Izin (Hari Pelatihan Aktif)</span>
                             </div>
-                            <div class="stat-icon-wrapper"><i data-lucide="star"></i></div>
+                            <div class="stat-icon-wrapper" style="background-color: rgba(217, 119, 6, 0.1); color: var(--color-accent);"><i data-lucide="help-circle"></i></div>
                         </div>
-                        <!-- Card 4 -->
+                        <!-- Card 4: Total Sakit -->
                         <div class="stat-card">
                             <div class="stat-body">
-                                <span class="stat-num" id="stat-laporan">84</span>
-                                <span class="stat-title">Laporan Dibuat Peserta</span>
+                                <span class="stat-num" id="stat-sakit" style="color: #ef4444;">0</span>
+                                <span class="stat-title" id="stat-sakit-title">Total Sakit (Hari Pelatihan Aktif)</span>
                             </div>
-                            <div class="stat-icon-wrapper"><i data-lucide="file-spreadsheet"></i></div>
+                            <div class="stat-icon-wrapper" style="background-color: rgba(239, 68, 68, 0.1); color: #ef4444;"><i data-lucide="alert-circle"></i></div>
+                        </div>
+                        <!-- Card 5: Belum Presensi -->
+                        <div class="stat-card">
+                            <div class="stat-body">
+                                <span class="stat-num" id="stat-belum" style="color: var(--color-text-muted);">0</span>
+                                <span class="stat-title" id="stat-belum-title">Belum Presensi (Hari Pelatihan Aktif)</span>
+                            </div>
+                            <div class="stat-icon-wrapper" style="background-color: #f1f5f9; color: var(--color-text-muted);"><i data-lucide="clock"></i></div>
+                        </div>
+                        <!-- Card 6: Total Laporan Dibuat -->
+                        <div class="stat-card">
+                            <div class="stat-body">
+                                <span class="stat-num" id="stat-laporan">0</span>
+                                <span class="stat-title">Total Laporan Dibuat</span>
+                            </div>
+                            <div class="stat-icon-wrapper" style="background-color: rgba(79, 70, 229, 0.1); color: #4f46e5;"><i data-lucide="file-spreadsheet"></i></div>
+                        </div>
+                        <!-- Card 7: Total Testimoni -->
+                        <div class="stat-card">
+                            <div class="stat-body">
+                                <span class="stat-num" id="stat-testimoni">0</span>
+                                <span class="stat-title">Total Testimoni</span>
+                            </div>
+                            <div class="stat-icon-wrapper" style="background-color: rgba(236, 72, 153, 0.1); color: #ec4899;"><i data-lucide="message-square"></i></div>
                         </div>
                     </div>
 
@@ -1423,6 +1454,9 @@
                                     <option value="Singkawang Utara">Singkawang Utara</option>
                                     <option value="Singkawang Selatan">Singkawang Selatan</option>
                                 </select>
+                                <select id="f-sekolah" onchange="filterPresenceTable()">
+                                    <option value="">Semua Sekolah</option>
+                                </select>
                             </div>
                         </div>
                     </div>
@@ -1457,6 +1491,95 @@
                         </table>
                     </div>
                 </div>
+
+                <!-- PANE 3: Manajemen Peserta (NEW) -->
+                <div class="dashboard-pane hidden" id="db-pane-peserta">
+                    <!-- Toolbar: Tambah, Import, Export -->
+                    <div class="mgmt-toolbar">
+                        <div class="mgmt-toolbar-left">
+                            <button class="btn btn-primary mgmt-btn-primary" onclick="openAddParticipantModal()" id="btn-tambah-peserta">
+                                <i data-lucide="user-plus"></i> Tambah Peserta
+                            </button>
+                            <label class="btn btn-secondary mgmt-btn-import" for="import-excel-input" title="Import dari file Excel (.xlsx)">
+                                <i data-lucide="file-spreadsheet"></i> Import Excel
+                            </label>
+                            <input type="file" id="import-excel-input" accept=".xlsx,.xls" style="display:none;" onchange="handleExcelImport(event)">
+                            <button class="btn btn-outline-sm mgmt-btn-template" onclick="downloadParticipantTemplate()" title="Download template Excel kosong">
+                                <i data-lucide="download"></i> Template
+                            </button>
+                        </div>
+                        <div class="mgmt-toolbar-right">
+                            <button class="btn btn-outline-sm" onclick="exportParticipantsExcel()" title="Export ke Excel">
+                                <i data-lucide="table-2"></i> Excel
+                            </button>
+                            <button class="btn btn-outline-sm" onclick="exportParticipantsCSV()" title="Export ke CSV">
+                                <i data-lucide="file-text"></i> CSV
+                            </button>
+                            <button class="btn btn-outline-sm" onclick="exportParticipantsPDF()" title="Export ke PDF">
+                                <i data-lucide="file-down"></i> PDF
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Stats Bar -->
+                    <div class="mgmt-stats-bar">
+                        <span id="mgmt-stat-total">Total: <b>0</b> peserta</span>
+                        <span id="mgmt-stat-aktif">Aktif: <b>0</b></span>
+                        <span id="mgmt-stat-filtered">Ditampilkan: <b>0</b></span>
+                    </div>
+
+                    <!-- Search & Filter Bar -->
+                    <div class="mgmt-filter-bar">
+                        <div class="mgmt-search-wrapper">
+                            <i data-lucide="search"></i>
+                            <input type="text" id="mgmt-search" placeholder="Cari nama, NIP, atau sekolah..." oninput="filterAndRenderParticipantTable()">
+                        </div>
+                        <select id="mgmt-filter-district" onchange="filterAndRenderParticipantTable()">
+                            <option value="">Semua Kecamatan</option>
+                            <option value="Singkawang Tengah">Singkawang Tengah</option>
+                            <option value="Singkawang Barat">Singkawang Barat</option>
+                            <option value="Singkawang Selatan">Singkawang Selatan</option>
+                            <option value="Singkawang Timur">Singkawang Timur</option>
+                            <option value="Singkawang Utara">Singkawang Utara</option>
+                        </select>
+                        <select id="mgmt-filter-status" onchange="filterAndRenderParticipantTable()">
+                            <option value="">Semua Status</option>
+                            <option value="Aktif">Aktif</option>
+                            <option value="Tidak Aktif">Tidak Aktif</option>
+                        </select>
+                    </div>
+
+                    <!-- Participants Table -->
+                    <div class="mgmt-table-wrapper">
+                        <table class="mgmt-table" id="mgmt-participants-table">
+                            <thead>
+                                <tr>
+                                    <th>No</th>
+                                    <th>Nama Lengkap</th>
+                                    <th>NIP</th>
+                                    <th>Asal Sekolah</th>
+                                    <th>Kecamatan</th>
+                                    <th>Nomor HP</th>
+                                    <th>Email</th>
+                                    <th>Status</th>
+                                    <th>Tgl Input</th>
+                                    <th>Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mgmt-table-body">
+                                <!-- JS renders rows here -->
+                            </tbody>
+                        </table>
+                        <div class="mgmt-empty-state hidden" id="mgmt-empty-state">
+                            <i data-lucide="users"></i>
+                            <p>Belum ada data peserta yang cocok dengan filter ini.</p>
+                        </div>
+                    </div>
+
+                    <!-- Pagination -->
+                    <div class="mgmt-pagination" id="mgmt-pagination"></div>
+                </div>
+
             </div>
         </div>
     </section>
@@ -1962,9 +2085,9 @@
                         <div class="idcard-sig-box">
                             <span class="sig-title">Ketua Panitia Pelaksana,</span>
                             <div class="sig-space">
-                                <span class="sig-text-mock">TOKIMIN, M.Pd.</span>
+                                <span class="sig-text-mock">TOKIMIN, M.Pd.I</span>
                             </div>
-                            <span class="sig-name-footer">Tokimin, M.Pd.</span>
+                            <span class="sig-name-footer">Tokimin, M.Pd.I</span>
                         </div>
                     </div>
                 </div>
@@ -2083,6 +2206,135 @@
         </div>
     </div>
 
+    <!-- MODAL: Form Tambah / Edit Peserta -->
+    <div class="modal-overlay" id="participant-form-modal">
+        <div class="modal-card modal-medium animate-zoom-in">
+            <div class="modal-header">
+                <h3 id="participant-form-modal-title">Tambah Peserta Baru</h3>
+                <button onclick="closeParticipantFormModal()" class="btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <form id="form-peserta" onsubmit="saveParticipant(event)">
+                    <input type="hidden" id="pf-id">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pf-name">Nama Lengkap (beserta Gelar) <span class="required-star">*</span></label>
+                            <input type="text" id="pf-name" required placeholder="Contoh: Sari Dewi, S.Pd." autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="pf-nip">NIP / NUPTK <small>(opsional)</small></label>
+                            <input type="text" id="pf-nip" placeholder="Contoh: 19860112 200910 1 002">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pf-school">Asal Sekolah <span class="required-star">*</span></label>
+                            <input type="text" id="pf-school" required placeholder="Contoh: SDN 1 SINGKAWANG" autocomplete="off">
+                        </div>
+                        <div class="form-group">
+                            <label for="pf-district">Kecamatan <span class="required-star">*</span></label>
+                            <select id="pf-district" required>
+                                <option value="">-- Pilih Kecamatan --</option>
+                                <option value="Singkawang Tengah">Singkawang Tengah</option>
+                                <option value="Singkawang Barat">Singkawang Barat</option>
+                                <option value="Singkawang Selatan">Singkawang Selatan</option>
+                                <option value="Singkawang Timur">Singkawang Timur</option>
+                                <option value="Singkawang Utara">Singkawang Utara</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pf-phone">Nomor HP <small>(opsional)</small></label>
+                            <input type="tel" id="pf-phone" placeholder="Contoh: 081234567890">
+                        </div>
+                        <div class="form-group">
+                            <label for="pf-email">Email <small>(opsional)</small></label>
+                            <input type="email" id="pf-email" placeholder="Contoh: guru@email.com">
+                        </div>
+                    </div>
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="pf-status">Status Peserta</label>
+                            <select id="pf-status">
+                                <option value="Aktif">Aktif</option>
+                                <option value="Tidak Aktif">Tidak Aktif</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="form-actions-row">
+                        <button type="button" onclick="closeParticipantFormModal()" class="btn btn-outline-sm">Batal</button>
+                        <button type="submit" class="btn btn-primary" id="pf-submit-btn">
+                            <i data-lucide="save"></i> Simpan Peserta
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Preview Import Excel -->
+    <div class="modal-overlay" id="import-preview-modal">
+        <div class="modal-card modal-xlarge animate-zoom-in">
+            <div class="modal-header">
+                <h3><i data-lucide="file-spreadsheet"></i> Preview Data Import Excel</h3>
+                <button onclick="closeImportPreviewModal()" class="btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body">
+                <div class="import-summary-bar">
+                    <span id="import-count-valid">Data valid: <b>0</b></span>
+                    <span id="import-count-skip">Duplikat/Kosong: <b>0</b></span>
+                </div>
+                <p class="import-guide-text"><i data-lucide="info"></i> Kolom yang dikenali: <b>Nama Lengkap, NIP, Asal Sekolah, Kecamatan, Nomor HP, Email</b>. Baris duplikat (nama+sekolah sama) akan dilewati otomatis.</p>
+                <div class="mgmt-table-wrapper" style="max-height: 350px;">
+                    <table class="mgmt-table" id="import-preview-table">
+                        <thead>
+                            <tr>
+                                <th>No</th>
+                                <th>Nama Lengkap</th>
+                                <th>NIP</th>
+                                <th>Asal Sekolah</th>
+                                <th>Kecamatan</th>
+                                <th>Nomor HP</th>
+                                <th>Email</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="import-preview-body">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <div class="modal-footer" style="display:flex; gap:10px; justify-content:flex-end; padding: 16px 24px; border-top: 1px solid var(--color-border);">
+                <button onclick="closeImportPreviewModal()" class="btn btn-outline-sm">Batal</button>
+                <button onclick="executeImport()" class="btn btn-primary" id="btn-execute-import">
+                    <i data-lucide="upload"></i> Import Sekarang
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Konfirmasi Hapus Peserta -->
+    <div class="modal-overlay" id="confirm-delete-modal">
+        <div class="modal-card modal-small animate-zoom-in">
+            <div class="modal-header">
+                <h3 style="color: var(--color-danger, #ef4444);"><i data-lucide="alert-triangle"></i> Konfirmasi Hapus</h3>
+                <button onclick="closeConfirmDeleteModal()" class="btn-close-modal"><i data-lucide="x"></i></button>
+            </div>
+            <div class="modal-body" style="text-align:center; padding: 24px;">
+                <p>Apakah Anda yakin ingin menghapus peserta:</p>
+                <p style="font-weight:700; font-size:1.05rem; margin: 10px 0;" id="confirm-delete-name">—</p>
+                <p style="color: var(--color-text-muted); font-size:0.9rem;">Tindakan ini tidak dapat dibatalkan.</p>
+            </div>
+            <div class="modal-footer" style="display:flex; gap:10px; justify-content:center; padding: 16px 24px; border-top: 1px solid var(--color-border);">
+                <button onclick="closeConfirmDeleteModal()" class="btn btn-outline-sm">Batal</button>
+                <button onclick="confirmDeleteParticipant()" class="btn btn-danger" id="btn-confirm-delete">
+                    <i data-lucide="trash-2"></i> Ya, Hapus
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- CUSTOM NOTIFICATION BAR -->
     <div class="notification-toast" id="toast">
         <div class="toast-content">
@@ -2092,6 +2344,6 @@
     </div>
 
     <!-- Custom JS Script -->
-    <script src="app.js"></script>
+    <script src="app.js?v=2.0"></script>
 </body>
 </html>
